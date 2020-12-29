@@ -327,12 +327,12 @@ function CreateMenu() {
                                       }
                                     })
                                     .then((response) => {
-                                      // eslint-disable-next-line
-                                      console.log(response);
-                                      const newMenu = [...state.editedMenu];
-                                      newMenu.splice(mealMenuIndex, 1);
-                                      dispatch({ type: 'EDIT_MENU', payload: newMenu });
-                                      updateMenu();
+                                      if(response.status === 202) {
+                                        const newMenu = [...state.editedMenu];
+                                        newMenu.splice(mealMenuIndex, 1);
+                                        dispatch({ type: 'EDIT_MENU', payload: newMenu });
+                                        updateMenu();
+                                      }
                                     })
                                     .catch((err) => {
                                       if(err.response) {
@@ -356,9 +356,9 @@ function CreateMenu() {
                                   axios
                                     .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu',mealMenu)
                                     .then((response) => {
-                                      // eslint-disable-next-line
-                                      console.log(response);
-                                      updateMenu();
+                                      if(response.status === 201) {
+                                        updateMenu();
+                                      }
                                     })
                                     .catch((err) => {
                                       if(err.response) {
@@ -580,18 +580,20 @@ function CreateMenu() {
                 axios
                   .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu',newMenuItem)
                   .then((response) => {
-                    // Save New menu item with id on screen
-                    const newMenuId = response.data.meal_uid;
-                    const newMenuItemId = {
-                      ...newMenuItem,
-                      menu_uid: newMenuId,
+                    if(response.status === 201) {
+                      // Save New menu item with id on screen
+                      const newMenuId = response.data.meal_uid;
+                      const newMenuItemId = {
+                        ...newMenuItem,
+                        menu_uid: newMenuId,
+                      }
+                      const newEditedMenu = [...state.editedMenu];
+                      newEditedMenu.push(newMenuItemId)
+                      dispatch({ type: 'EDIT_MENU', payload: newEditedMenu });
+                      // Save menu item after switching to different date and back
+                      updateMenu();
+                      toggleAddMenu()
                     }
-                    const newEditedMenu = [...state.editedMenu];
-                    newEditedMenu.push(newMenuItemId)
-                    dispatch({ type: 'EDIT_MENU', payload: newEditedMenu });
-                    // Save menu item after switching to different date and back
-                    updateMenu();
-                    toggleAddMenu()
                   })
                   .catch((err) => {
                     if(err.response) {
