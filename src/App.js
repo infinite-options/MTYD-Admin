@@ -1,23 +1,65 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
+import NavBar from './components/NavBar';
+import Home from './components/Home';
+import CreateMenu from './components/CreateMenu';
+import EditMeal from './components/EditMeal';
+import CreateMeal from './components/CreateMeal';
+import EditMealRecipe from './components/EditMealRecipe';
+import PlansCoupons from './components/PlansCoupons';
+import OrdersIngredients from './components/OrdersIngredients';
+import Customers from './components/Customers';
+import Notifications from './components/Notifications'
+
+import './App.css'
 
 function App() {
+  // Store nav bar as variable, then put above pages
+  // Allow for easier integration with log in when needed
+  //  and avoid reloading nav bar when switching between routes
+  const navBar = <NavBar />;
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Router>
+        <Switch>
+          <Route exact path="/">
+            {navBar}
+            <Home />
+          </Route>
+          <Route path="/create-menu">
+            {navBar}
+            <CreateMenu />
+          </Route>
+          <Route path="/edit-meal">
+            {navBar}
+            <EditMeal />
+          </Route>
+          <Route path="/create-meal">
+            {navBar}
+            <CreateMeal />
+          </Route>
+          <Route path='/edit-meal-recipe'>
+            {navBar}
+            <EditMealRecipe />
+          </Route>
+          <Route path='/plans-coupons'>
+            {navBar}
+            <PlansCoupons />
+          </Route>
+          <Route path='/order-ingredients'>
+            {navBar}
+            <OrdersIngredients />
+          </Route>
+          <Route path='/customers'>
+            {navBar}
+            <Customers />
+          </Route>
+          <Route path='/notifications'>
+            {navBar}
+            <Notifications />
+          </Route>
+        </Switch>
+      </Router>
     </div>
   );
 }
