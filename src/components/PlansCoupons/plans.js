@@ -66,12 +66,14 @@ function Plans() {
   const saveMealPlan = () => {
     axios
       .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/Edit_Meal_Plan',state.editedPlan)
-      .then(() => {
-        const planIndex = state.mealPlans.findIndex((plan) => plan.item_uid === state.editedPlan.item_uid);
-        const newMealPlans = [...state.mealPlans];
-        newMealPlans[planIndex] = state.editedPlan;
-        dispatch({ type:'TOGGLE_EDIT_PLAN', payload: initialState.editedPlan})
-        dispatch({ type: 'FETCH_PLANS', payload: newMealPlans});
+      .then((response) => {
+        if(response.status === 201) {
+          const planIndex = state.mealPlans.findIndex((plan) => plan.item_uid === state.editedPlan.item_uid);
+          const newMealPlans = [...state.mealPlans];
+          newMealPlans[planIndex] = state.editedPlan;
+          dispatch({ type:'TOGGLE_EDIT_PLAN', payload: initialState.editedPlan})
+          dispatch({ type: 'FETCH_PLANS', payload: newMealPlans});
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -92,13 +94,17 @@ function Plans() {
         }
       })
       .then((response) => {
-        const plansApiResult = response.data.result;
-        // for(const index in plansApiResult) {
-        //   for(const property in plansApiResult[index]) {
-        //     plansApiResult[index][property] = plansApiResult[index][property].toString();
-        //   }
-        // }
-        dispatch({ type: 'FETCH_PLANS', payload: plansApiResult});
+        if(response.status === 200) {
+          const plansApiResult = response.data.result;
+          // Convert property values to string and nulls to empty string
+          for(let index = 0; index < plansApiResult.length; index++) {
+            for (const property in plansApiResult[index]) {
+                const value = plansApiResult[index][property];
+                plansApiResult[index][property] = value ? value.toString() : '';
+              } 
+          }
+          dispatch({ type: 'FETCH_PLANS', payload: plansApiResult});
+        }
       })
       .catch((err) => {
         if (err.response) {

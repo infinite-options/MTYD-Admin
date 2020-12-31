@@ -15,7 +15,7 @@ const initialState = {
     coupon_uid: '',
     coupon_id: '',
     valid: 'TRUE',
-    discount: '',
+    discount_percent: '',
     discount_amount: '',
     discount_shipping: '',
     expire_date: '',
@@ -54,7 +54,18 @@ function Coupons() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const toggleEditCoupon = (initialCoupon) => {
-    dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialCoupon});
+    const formattedCoupon = {
+      ...initialCoupon,
+      // Change expire_date to YYYY-MM-DD be able to use date input
+      expire_date: initialCoupon.expire_date.slice(0,10),
+      // Convert various numbers to strings
+      discount_percent: initialCoupon.discount_percent.toString(),
+      discount_amount: initialCoupon.discount_amount.toString(),
+      discount_shipping: initialCoupon.discount_shipping.toString(),
+      limits: initialCoupon.limits.toString(),
+      num_used: initialCoupon.num_used.toString(),
+    }
+    dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: formattedCoupon});
   }
 
   const editCoupon = (property, value) => {
@@ -67,16 +78,22 @@ function Coupons() {
 
   const saveCoupon = () => {
     if(state.editedCoupon.coupon_uid === '') {
+      const formattedCoupon = {
+        ...state.editedCoupon,
+        cup_business_uid: "",
+      }
       // Add New Coupon
       axios
-        .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons',state.editedCoupon)
+        .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons',formattedCoupon)
         .then((response) => {
-          // eslint-disable-next-line
-          console.log(response);
-          const newCoupons = [...state.coupons];
-          newCoupons.push(state.editedCoupon);
-          dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
-          dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
+          if(response.status === 201) {
+            const couponUid = response.data.coupon_uid;
+            formattedCoupon.coupon_uid = couponUid
+            const newCoupons = [...state.coupons];
+            newCoupons.push(formattedCoupon);
+            dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
+            dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
+          }
         })
         .catch((err) => {
           if (err.response) {
@@ -92,13 +109,14 @@ function Coupons() {
       axios
         .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons',state.editedCoupon)
         .then((response) => {
-          // eslint-disable-next-line
-          console.log(response);
-          const couponIndex = state.coupons.findIndex((coupon) => coupon.coupon_uid === state.editedCoupon.coupon_uid);
-          const newCoupons = [...state.coupons];
-          newCoupons[couponIndex] = state.editedCoupon;
-          dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
-          dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
+          if(response.status === 200) {
+            const couponIndex = state.coupons.findIndex((coupon) => coupon.coupon_uid === state.editedCoupon.coupon_uid);
+            const newCoupons = [...state.coupons];
+            newCoupons[couponIndex] = state.editedCoupon;
+            dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
+            dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
+            getCoupons();
+          }
         })
         .catch((err) => {
           if (err.response) {
@@ -111,13 +129,21 @@ function Coupons() {
     }
   }
 
-  // Fetch Coupons
-  useEffect(() => {
+  const getCoupons = () => {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons')
       .then((response) => {
-        const couponsApiResult = response.data.result;
-        dispatch({ type: 'FETCH_COUPONS', payload: couponsApiResult});
+        if(response.status === 200) {
+          const couponsApiResult = response.data.result;
+          // Convert property values to string and nulls to empty string
+          for(let index = 0; index < couponsApiResult.length; index++) {
+            for (const property in couponsApiResult[index]) {
+              const value = couponsApiResult[index][property];
+              couponsApiResult[index][property] = value ? value.toString() : '';
+            } 
+          }
+          dispatch({ type: 'FETCH_COUPONS', payload: couponsApiResult});
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -127,6 +153,11 @@ function Coupons() {
         // eslint-disable-next-line no-console
         console.log(err);
       });
+  }
+
+  // Fetch Coupons
+  useEffect(() => {
+    getCoupons();
   },[])
 
   return (
@@ -191,7 +222,7 @@ function Coupons() {
                         <td> {coupon.recurring} </td>
                         <td> {coupon.email_id} </td>
                         <td>
-                        <button
+                          <button
                             className={'icon-button'}
                             onClick={() => {toggleEditCoupon(coupon)}}
                           >
@@ -212,6 +243,7 @@ function Coupons() {
       <Modal
         show={state.editingCoupon}
         onHide={() => toggleEditCoupon(initialState.editedCoupon)}
+        animation={false}
       >
         <Modal.Header closeButton>
           <Modal.Title> Add/Edit Coupon </Modal.Title>

@@ -10,7 +10,7 @@ import {
 
 const initialState = {
   mealData: [],
-  meaureUnitsData: [],
+  measureUnitsData: [],
   ingredientsData: [],
   selectedMeal: '',
   mealIngredients: [],
@@ -18,8 +18,8 @@ const initialState = {
   newIngredient: {
     ingredient_desc: '',
     package_size: '',
-    ingredient_measure_id: '',
-    ingredient_cost: '',
+    package_unit: '',
+    package_cost: '',
   },
   newMeasureUnit: {
     type: '',
@@ -39,7 +39,7 @@ function reducer (state, action) {
     case 'FETCH_MEASURE_UNITS':
       return {
         ...state,
-        meaureUnitsData: action.payload,
+        measureUnitsData: action.payload,
       }
     case 'FETCH_INGREDIENTS':
       return {
@@ -84,8 +84,10 @@ function EditMealRecipe() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
       .then((response) => {
-        const mealApiResult = response.data.result;
-        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        if(response.status === 200) {
+          const mealApiResult = response.data.result;
+          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -107,8 +109,10 @@ function EditMealRecipe() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/measure_unit')
       .then((response) => {
-        const measureUnitApiResult = response.data.result;
-        dispatch({ type: 'FETCH_MEASURE_UNITS', payload: measureUnitApiResult });
+        if(response.status === 200) {
+          const measureUnitApiResult = response.data.result;
+          dispatch({ type: 'FETCH_MEASURE_UNITS', payload: measureUnitApiResult });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -125,8 +129,10 @@ function EditMealRecipe() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/ingredients')
       .then((response) => {
-        const ingredientApiResult = response.data.result;
-        dispatch({ type: 'FETCH_INGREDIENTS', payload: ingredientApiResult });
+        if(response.status === 200) {
+          const ingredientApiResult = response.data.result;
+          dispatch({ type: 'FETCH_INGREDIENTS', payload: ingredientApiResult });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -144,8 +150,17 @@ function EditMealRecipe() {
       axios
         .get(`https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/Ingredients_Recipe_Specific/${state.selectedMeal}`)
         .then((response) => {
-          const mealIngredients = response.data.result;
-          dispatch({ type: 'FETCH_MEAL_INGREDIENTS', payload: mealIngredients });
+          if(response.status === 200) {
+            const mealIngredients = response.data.result;
+            // Convert property values to string and nulls to empty string
+            for(let index = 0; index < mealIngredients.length; index++) {
+              for (const property in mealIngredients[index]) {
+                const value = mealIngredients[index][property];
+                mealIngredients[index][property] = value ? value.toString() : '';
+              } 
+            }
+            dispatch({ type: 'FETCH_MEAL_INGREDIENTS', payload: mealIngredients });
+          }
         })
         .catch((err) => {
           if (err.response) {
@@ -172,8 +187,9 @@ function EditMealRecipe() {
     axios
       .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/ingredients',state.newIngredient)
       .then((response) => {
-        // eslint-disable-next-line
-        console.log(response)
+        if(response.status === 200) {
+          dispatch({ type: 'EDIT_NEW_INGREDIENT', payload: initialState.newIngredient });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -213,14 +229,16 @@ function EditMealRecipe() {
     axios
       .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/measure_unit',state.newMeasureUnit)
       .then((response) => {
-        const newMeasureUnitId = response.data.measure_unit_uid;
-        const allMeasureUnits = state.meaureUnitsData;
-        allMeasureUnits.push({
-          measure_unit_uid: newMeasureUnitId,
-          ...state.newMeasureUnit
-        })
-        dispatch({ type: 'EDIT_NEW_MEASURE_UNIT', payload: initialState.newMeasureUnit });
-        dispatch({ type: 'FETCH_MEASURE_UNITS', payload: allMeasureUnits });
+        if(response.status === 201) {
+          const newMeasureUnitId = response.data.measure_unit_uid;
+          const allMeasureUnits = state.measureUnitsData;
+          allMeasureUnits.push({
+            measure_unit_uid: newMeasureUnitId,
+            ...state.newMeasureUnit
+          })
+          dispatch({ type: 'EDIT_NEW_MEASURE_UNIT', payload: initialState.newMeasureUnit });
+          dispatch({ type: 'FETCH_MEASURE_UNITS', payload: allMeasureUnits });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -378,7 +396,7 @@ function EditMealRecipe() {
                                 (event) => {
                                   const newRecipe = [...state.editedMealIngredients];
                                   const newMeasureUnitId = event.target.value;
-                                  const newMeasureUnitInfo = state.meaureUnitsData
+                                  const newMeasureUnitInfo = state.measureUnitsData
                                       .filter((allMeasureUnits) => allMeasureUnits.measure_unit_uid === newMeasureUnitId)[0];
                                   newRecipe[ingredientIndex] = {
                                     ...newRecipe[ingredientIndex],
@@ -390,7 +408,7 @@ function EditMealRecipe() {
                             >
                               <option value="" hidden>Select a Measure Unit</option>
                               {
-                                state.meaureUnitsData.map(
+                                state.measureUnitsData.map(
                                   (allMeasureUnits) => (
                                     <option
                                       value={allMeasureUnits.measure_unit_uid}
@@ -422,8 +440,10 @@ function EditMealRecipe() {
                                             recipe_uid: ingredient.recipe_uid,
                                           }
                                         })
-                                        .then(() => {
-                                          removeIngredient();
+                                        .then((response) => {
+                                          if(response.status === 202) {
+                                            removeIngredient();
+                                          }
                                         })
                                         .catch((err) => {
                                           if(err.response) {
@@ -459,8 +479,10 @@ function EditMealRecipe() {
                                     };
                                     axios
                                       .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/update_recipe',object)
-                                      .then(() => {
-                                        updateMeals();
+                                      .then((response) => {
+                                        if(response.status === 200) {
+                                          updateMeals();
+                                        }
                                       })
                                       .catch((err) => {
                                         if(err.response) {
@@ -481,9 +503,9 @@ function EditMealRecipe() {
                                     axios
                                       .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/add_new_ingredient_recipe',object)
                                       .then((response) => {
-                                        // eslint-disable-next-line
-                                        console.log(response)
-                                        updateMeals();
+                                        if(response.status === 200) {
+                                          updateMeals();
+                                        }
                                       })
                                       .catch((err) => {
                                         if(err.response) {
@@ -560,16 +582,16 @@ function EditMealRecipe() {
                   <td>
                     <Form.Control
                       as='select'
-                      value={state.newIngredient.ingredient_measure_id}
+                      value={state.newIngredient.package_unit}
                       onChange={
                         (event) => {
-                          editNewIngredient('ingredient_measure_id',event.target.value);
+                          editNewIngredient('package_unit',event.target.value);
                         }
                       }
                     >
                       <option value=''> Select a Unit </option>
                       {
-                        state.meaureUnitsData.map(
+                        state.measureUnitsData.map(
                           (allMeasureUnits) => (
                             <option
                               value={allMeasureUnits.measure_unit_uid}
@@ -585,10 +607,10 @@ function EditMealRecipe() {
                   <td>
                     <Form.Control
                       type="number"
-                      value={state.newIngredient.ingredient_cost}
+                      value={state.newIngredient.package_cost}
                       onChange={
                         (event) => {
-                          editNewIngredient('ingredient_cost',event.target.value);
+                          editNewIngredient('package_cost',event.target.value);
                         }
                       }
                     />

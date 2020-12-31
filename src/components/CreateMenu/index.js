@@ -123,9 +123,11 @@ function CreateMenu() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu')
       .then((response) => {
-        const fullMenu = response.data.result;
-        if(fullMenu !== undefined) {
-          dispatch({ type: 'FETCH_MENU', payload: fullMenu });
+        if(response.status === 200) {
+          const fullMenu = response.data.result;
+          if(fullMenu !== undefined) {
+            dispatch({ type: 'FETCH_MENU', payload: fullMenu });
+          }
         }
       })
       .catch((err) => {
@@ -148,8 +150,10 @@ function CreateMenu() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
       .then((response) => {
-        const mealApiResult = response.data.result;
-        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        if(response.status === 200) {
+          const mealApiResult = response.data.result;
+          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        }
       })
       .catch((err) => {
         if (err.response) {

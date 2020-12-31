@@ -62,8 +62,17 @@ function EditMeal() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
       .then((response) => {
-        const mealApiResult = response.data.result;
-        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        if(response.status === 200) {
+          const mealApiResult = response.data.result;
+          // Convert property values to string and nulls to empty string
+          for(let index = 0; index < mealApiResult.length; index++) {
+            for (const property in mealApiResult[index]) {
+                const value = mealApiResult[index][property];
+                mealApiResult[index][property] = value ? value.toString() : '';
+              } 
+          }
+          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -83,11 +92,6 @@ function EditMeal() {
           meal.meal_uid === value
         )
       )[0];
-      // for (const property in newMeal) {
-      //   const value = newMeal[property];
-      //   // Convert to string, use empty string if no value
-      //   newMeal[property] = value ? value.toString() : '';
-      // }
       dispatch({ type: 'EDIT_MEAL', payload: newMeal })
     } else {
       // Property is property changed, value is new value of that property
@@ -100,16 +104,17 @@ function EditMeal() {
   }
 
   const saveEditedMeal = () => {
+    const savedMeal = state.editedMeal;
     axios
-      .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals',state.editedMeal)
+      .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals',savedMeal)
       .then((response) => {
-        // eslint-disable-next-line no-console
-        console.log(response);
-        // Make sure if saved and come back to same meal, meal is changed; no need to call API again
-        const changedIndex = state.mealData.findIndex((meal) => meal.meal_uid === state.selectedMeal);
-        const newMealData = [...state.mealData];
-        newMealData[changedIndex] = state.editedMeal;
-        dispatch({ type: 'FETCH_MEALS', payload: newMealData });
+        if(response.status === 201) {
+          // Make sure if saved and come back to same meal, meal is changed; no need to call API again
+          const changedIndex = state.mealData.findIndex((meal) => meal.meal_uid === state.selectedMeal);
+          const newMealData = [...state.mealData];
+          newMealData[changedIndex] = state.editedMeal;
+          dispatch({ type: 'FETCH_MEALS', payload: newMealData });
+        }
       })
       .catch((err) => {
         if (err.response) {

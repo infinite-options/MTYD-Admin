@@ -55,8 +55,10 @@ function CreateMeal() {
     axios
       .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
       .then((response) => {
-        const mealApiResult = response.data.result;
-        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        if(response.status === 200) {
+          const mealApiResult = response.data.result;
+          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
+        }
       })
       .catch((err) => {
         if (err.response) {
@@ -85,9 +87,9 @@ function CreateMeal() {
     axios
       .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals',state.newMeal)
       .then((response) => {
-        // eslint-disable-next-line no-console
-        console.log(response);
-        clearNewMeal();
+        if(response.status === 201) {
+          clearNewMeal();
+        }
       })
       .catch((err) => {
         if(err.response) {

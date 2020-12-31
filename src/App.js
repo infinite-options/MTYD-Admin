@@ -9,6 +9,7 @@ import EditMealRecipe from './components/EditMealRecipe';
 import PlansCoupons from './components/PlansCoupons';
 import OrdersIngredients from './components/OrdersIngredients';
 import Customers from './components/Customers';
+import GoogleAnalytics from './components/GoogleAnalytics';
 import Notifications from './components/Notifications'
 
 import './App.css'
@@ -53,6 +54,10 @@ function App() {
           <Route path='/customers'>
             {navBar}
             <Customers />
+          </Route>
+          <Route path='/google-analytics'>
+            {navBar}
+            <GoogleAnalytics />
           </Route>
           <Route path='/notifications'>
             {navBar}
