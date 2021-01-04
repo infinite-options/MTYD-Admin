@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../constants';
 import {
   Breadcrumb, Container, Row, Col, Form, Button
 } from 'react-bootstrap';
@@ -60,7 +61,7 @@ function EditMeal() {
   // Fetch meals
   useEffect(() => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
+      .get(`${BASE_URL}meals`)
       .then((response) => {
         if(response.status === 200) {
           const mealApiResult = response.data.result;
@@ -106,7 +107,7 @@ function EditMeal() {
   const saveEditedMeal = () => {
     const savedMeal = state.editedMeal;
     axios
-      .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals',savedMeal)
+      .put(`${BASE_URL}meals`,savedMeal)
       .then((response) => {
         if(response.status === 201) {
           // Make sure if saved and come back to same meal, meal is changed; no need to call API again

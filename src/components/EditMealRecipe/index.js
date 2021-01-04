@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../constants';
 import {
   Breadcrumb, Form, Container, Row, Col, Table, Button
 } from 'react-bootstrap';
@@ -82,7 +83,7 @@ function EditMealRecipe() {
 
   const updateMeals = () => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
+      .get(`${BASE_URL}meals`)
       .then((response) => {
         if(response.status === 200) {
           const mealApiResult = response.data.result;
@@ -107,7 +108,7 @@ function EditMealRecipe() {
   // Fetch all measure units
   useEffect(() => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/measure_unit')
+      .get(`${BASE_URL}measure_unit`)
       .then((response) => {
         if(response.status === 200) {
           const measureUnitApiResult = response.data.result;
@@ -127,7 +128,7 @@ function EditMealRecipe() {
   // Fetch all ingredients
   useEffect(() => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/ingredients')
+      .get(`${BASE_URL}ingredients`)
       .then((response) => {
         if(response.status === 200) {
           const ingredientApiResult = response.data.result;
@@ -148,7 +149,7 @@ function EditMealRecipe() {
   useEffect(() => {
     if(state.selectedMeal !== '') {
       axios
-        .get(`https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/Ingredients_Recipe_Specific/${state.selectedMeal}`)
+        .get(`${BASE_URL}Ingredients_Recipe_Specific/${state.selectedMeal}`)
         .then((response) => {
           if(response.status === 200) {
             const mealIngredients = response.data.result;
@@ -185,7 +186,7 @@ function EditMealRecipe() {
 
   const saveNewIngredient = () => {
     axios
-      .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/ingredients',state.newIngredient)
+      .post(`${BASE_URL}ingredients`,state.newIngredient)
       .then((response) => {
         if(response.status === 200) {
           dispatch({ type: 'EDIT_NEW_INGREDIENT', payload: initialState.newIngredient });
@@ -227,7 +228,7 @@ function EditMealRecipe() {
 
   const saveNewMeasureUnit = () => {
     axios
-      .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/measure_unit',state.newMeasureUnit)
+      .post(`${BASE_URL}measure_unit`,state.newMeasureUnit)
       .then((response) => {
         if(response.status === 201) {
           const newMeasureUnitId = response.data.measure_unit_uid;
@@ -435,7 +436,7 @@ function EditMealRecipe() {
                                     if(ingredient.recipe_uid) {
                                       // Already in database, API call to remove
                                       axios
-                                        .delete('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/Delete_Recipe_Specific',{
+                                        .delete(`${BASE_URL}Delete_Recipe_Specific`,{
                                           params: {
                                             recipe_uid: ingredient.recipe_uid,
                                           }
@@ -478,7 +479,7 @@ function EditMealRecipe() {
                                       recipe_uid: ingredient.recipe_uid,
                                     };
                                     axios
-                                      .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/update_recipe',object)
+                                      .post(`${BASE_URL}update_recipe`,object)
                                       .then((response) => {
                                         if(response.status === 200) {
                                           updateMeals();
@@ -501,7 +502,7 @@ function EditMealRecipe() {
                                       meal_id: state.selectedMeal,
                                     };
                                     axios
-                                      .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/add_new_ingredient_recipe',object)
+                                      .post(`${BASE_URL}add_new_ingredient_recipe`,object)
                                       .then((response) => {
                                         if(response.status === 200) {
                                           updateMeals();

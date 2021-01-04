@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../constants';
 import {
   Row, Col, Table, Modal, Form, Button
 } from 'react-bootstrap';
@@ -80,7 +81,7 @@ function Zones () {
     } else {
       // Edit current zone
       axios
-        .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/Update_Zone',state.editedZone)
+        .put(`${BASE_URL}Update_Zone`,state.editedZone)
         .then((response) => {
           if(response.status === 200) {
             const zoneIndex = state.zones.findIndex((zone) => zone.zone_uid === state.editedZone.zone_uid);
@@ -104,7 +105,7 @@ function Zones () {
   // Fetch Zones
   useEffect(() => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/get_Zones')
+      .get(`${BASE_URL}get_Zones`)
       .then((response) => {
         if(response.status === 200) {
           const zoneApiResult = response.data.result;

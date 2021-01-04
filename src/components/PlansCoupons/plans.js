@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../constants';
 import {
   Row, Col, Table, Modal, Form, Button
 } from 'react-bootstrap';
@@ -65,7 +66,7 @@ function Plans() {
 
   const saveMealPlan = () => {
     axios
-      .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/Edit_Meal_Plan',state.editedPlan)
+      .put(`${BASE_URL}Edit_Meal_Plan`,state.editedPlan)
       .then((response) => {
         if(response.status === 201) {
           const planIndex = state.mealPlans.findIndex((plan) => plan.item_uid === state.editedPlan.item_uid);
@@ -88,7 +89,7 @@ function Plans() {
   // Fetch Plans
   useEffect(() => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/plans',{
+      .get(`${BASE_URL}plans`,{
         params: {
           business_uid: '200-000001'
         }

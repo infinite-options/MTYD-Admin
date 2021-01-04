@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../constants';
 import {
   Breadcrumb, Form, Button, Container, Row, Col, Table, Modal,
 } from 'react-bootstrap';
@@ -121,7 +122,7 @@ function CreateMenu() {
 
   const updateMenu = () => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu')
+      .get(`${BASE_URL}menu`)
       .then((response) => {
         if(response.status === 200) {
           const fullMenu = response.data.result;
@@ -148,7 +149,7 @@ function CreateMenu() {
   // Fetch meals
   useEffect(() => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/meals')
+      .get(`${BASE_URL}meals`)
       .then((response) => {
         if(response.status === 200) {
           const mealApiResult = response.data.result;
@@ -325,7 +326,7 @@ function CreateMenu() {
                               onClick={
                                 () => {
                                   axios
-                                    .delete('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu',{
+                                    .delete(`${BASE_URL}menu`,{
                                       params: {
                                         menu_uid: mealMenu.menu_uid,
                                       }
@@ -358,7 +359,7 @@ function CreateMenu() {
                               onClick={
                                 () => {
                                   axios
-                                    .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu',mealMenu)
+                                    .put(`${BASE_URL}menu`,mealMenu)
                                     .then((response) => {
                                       if(response.status === 201) {
                                         updateMenu();
@@ -582,7 +583,7 @@ function CreateMenu() {
                   meal_price:'10',
                 };
                 axios
-                  .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/menu',newMenuItem)
+                  .post(`${BASE_URL}menu`,newMenuItem)
                   .then((response) => {
                     if(response.status === 201) {
                       // Save New menu item with id on screen

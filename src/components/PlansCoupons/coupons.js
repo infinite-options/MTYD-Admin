@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../constants';
 import {
   Row, Col, Table, Modal, Form, Button
 } from 'react-bootstrap';
@@ -84,7 +85,7 @@ function Coupons() {
       }
       // Add New Coupon
       axios
-        .post('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons',formattedCoupon)
+        .post(`${BASE_URL}coupons`,formattedCoupon)
         .then((response) => {
           if(response.status === 201) {
             const couponUid = response.data.coupon_uid;
@@ -107,7 +108,7 @@ function Coupons() {
     else {
       // Edited Coupon
       axios
-        .put('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons',state.editedCoupon)
+        .put(`${BASE_URL}coupons`,state.editedCoupon)
         .then((response) => {
           if(response.status === 200) {
             const couponIndex = state.coupons.findIndex((coupon) => coupon.coupon_uid === state.editedCoupon.coupon_uid);
@@ -131,7 +132,7 @@ function Coupons() {
 
   const getCoupons = () => {
     axios
-      .get('https://ht56vci4v9.execute-api.us-west-1.amazonaws.com/dev/api/v2/coupons')
+      .get(`${BASE_URL}coupons`)
       .then((response) => {
         if(response.status === 200) {
           const couponsApiResult = response.data.result;
