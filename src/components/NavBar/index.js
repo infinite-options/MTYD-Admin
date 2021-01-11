@@ -82,6 +82,7 @@ function NavBar() {
             </Nav.Link>
           </Nav>
           <Nav>
+            <Nav.Link href="/zones"> Zones </Nav.Link>
             <Nav.Link href="/">Profile</Nav.Link>
             <Nav.Link eventKey={2} href="/">
               Log Out

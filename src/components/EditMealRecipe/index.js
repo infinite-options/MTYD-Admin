@@ -85,10 +85,8 @@ function EditMealRecipe() {
     axios
       .get(`${BASE_URL}meals`)
       .then((response) => {
-        if(response.status === 200) {
-          const mealApiResult = response.data.result;
-          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
-        }
+        const mealApiResult = response.data.result;
+        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
       })
       .catch((err) => {
         if (err.response) {
@@ -110,10 +108,8 @@ function EditMealRecipe() {
     axios
       .get(`${BASE_URL}measure_unit`)
       .then((response) => {
-        if(response.status === 200) {
-          const measureUnitApiResult = response.data.result;
-          dispatch({ type: 'FETCH_MEASURE_UNITS', payload: measureUnitApiResult });
-        }
+        const measureUnitApiResult = response.data.result;
+        dispatch({ type: 'FETCH_MEASURE_UNITS', payload: measureUnitApiResult });
       })
       .catch((err) => {
         if (err.response) {
@@ -130,10 +126,8 @@ function EditMealRecipe() {
     axios
       .get(`${BASE_URL}ingredients`)
       .then((response) => {
-        if(response.status === 200) {
-          const ingredientApiResult = response.data.result;
-          dispatch({ type: 'FETCH_INGREDIENTS', payload: ingredientApiResult });
-        }
+        const ingredientApiResult = response.data.result;
+        dispatch({ type: 'FETCH_INGREDIENTS', payload: ingredientApiResult });
       })
       .catch((err) => {
         if (err.response) {
@@ -151,17 +145,15 @@ function EditMealRecipe() {
       axios
         .get(`${BASE_URL}Ingredients_Recipe_Specific/${state.selectedMeal}`)
         .then((response) => {
-          if(response.status === 200) {
-            const mealIngredients = response.data.result;
-            // Convert property values to string and nulls to empty string
-            for(let index = 0; index < mealIngredients.length; index++) {
-              for (const property in mealIngredients[index]) {
-                const value = mealIngredients[index][property];
-                mealIngredients[index][property] = value ? value.toString() : '';
-              } 
-            }
-            dispatch({ type: 'FETCH_MEAL_INGREDIENTS', payload: mealIngredients });
+          const mealIngredients = response.data.result;
+          // Convert property values to string and nulls to empty string
+          for(let index = 0; index < mealIngredients.length; index++) {
+            for (const property in mealIngredients[index]) {
+              const value = mealIngredients[index][property];
+              mealIngredients[index][property] = value ? value.toString() : '';
+            } 
           }
+          dispatch({ type: 'FETCH_MEAL_INGREDIENTS', payload: mealIngredients });
         })
         .catch((err) => {
           if (err.response) {
@@ -187,10 +179,8 @@ function EditMealRecipe() {
   const saveNewIngredient = () => {
     axios
       .post(`${BASE_URL}ingredients`,state.newIngredient)
-      .then((response) => {
-        if(response.status === 200) {
-          dispatch({ type: 'EDIT_NEW_INGREDIENT', payload: initialState.newIngredient });
-        }
+      .then(() => {
+        dispatch({ type: 'EDIT_NEW_INGREDIENT', payload: initialState.newIngredient });
       })
       .catch((err) => {
         if (err.response) {
@@ -230,16 +220,14 @@ function EditMealRecipe() {
     axios
       .post(`${BASE_URL}measure_unit`,state.newMeasureUnit)
       .then((response) => {
-        if(response.status === 201) {
-          const newMeasureUnitId = response.data.measure_unit_uid;
-          const allMeasureUnits = state.measureUnitsData;
-          allMeasureUnits.push({
-            measure_unit_uid: newMeasureUnitId,
-            ...state.newMeasureUnit
-          })
-          dispatch({ type: 'EDIT_NEW_MEASURE_UNIT', payload: initialState.newMeasureUnit });
-          dispatch({ type: 'FETCH_MEASURE_UNITS', payload: allMeasureUnits });
-        }
+        const newMeasureUnitId = response.data.measure_unit_uid;
+        const allMeasureUnits = state.measureUnitsData;
+        allMeasureUnits.push({
+          measure_unit_uid: newMeasureUnitId,
+          ...state.newMeasureUnit
+        })
+        dispatch({ type: 'EDIT_NEW_MEASURE_UNIT', payload: initialState.newMeasureUnit });
+        dispatch({ type: 'FETCH_MEASURE_UNITS', payload: allMeasureUnits });
       })
       .catch((err) => {
         if (err.response) {

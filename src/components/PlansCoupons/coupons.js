@@ -87,14 +87,12 @@ function Coupons() {
       axios
         .post(`${BASE_URL}coupons`,formattedCoupon)
         .then((response) => {
-          if(response.status === 201) {
-            const couponUid = response.data.coupon_uid;
-            formattedCoupon.coupon_uid = couponUid
-            const newCoupons = [...state.coupons];
-            newCoupons.push(formattedCoupon);
-            dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
-            dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
-          }
+          const couponUid = response.data.coupon_uid;
+          formattedCoupon.coupon_uid = couponUid
+          const newCoupons = [...state.coupons];
+          newCoupons.push(formattedCoupon);
+          dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
+          dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
         })
         .catch((err) => {
           if (err.response) {
@@ -109,15 +107,13 @@ function Coupons() {
       // Edited Coupon
       axios
         .put(`${BASE_URL}coupons`,state.editedCoupon)
-        .then((response) => {
-          if(response.status === 200) {
-            const couponIndex = state.coupons.findIndex((coupon) => coupon.coupon_uid === state.editedCoupon.coupon_uid);
-            const newCoupons = [...state.coupons];
-            newCoupons[couponIndex] = state.editedCoupon;
-            dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
-            dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
-            getCoupons();
-          }
+        .then(() => {
+          const couponIndex = state.coupons.findIndex((coupon) => coupon.coupon_uid === state.editedCoupon.coupon_uid);
+          const newCoupons = [...state.coupons];
+          newCoupons[couponIndex] = state.editedCoupon;
+          dispatch({ type: 'FETCH_COUPONS', payload: newCoupons});
+          dispatch({ type: 'TOGGLE_EDIT_COUPON', payload: initialState.editedCoupon});
+          getCoupons();
         })
         .catch((err) => {
           if (err.response) {
@@ -134,17 +130,15 @@ function Coupons() {
     axios
       .get(`${BASE_URL}coupons`)
       .then((response) => {
-        if(response.status === 200) {
-          const couponsApiResult = response.data.result;
-          // Convert property values to string and nulls to empty string
-          for(let index = 0; index < couponsApiResult.length; index++) {
-            for (const property in couponsApiResult[index]) {
-              const value = couponsApiResult[index][property];
-              couponsApiResult[index][property] = value ? value.toString() : '';
-            } 
-          }
-          dispatch({ type: 'FETCH_COUPONS', payload: couponsApiResult});
+        const couponsApiResult = response.data.result;
+        // Convert property values to string and nulls to empty string
+        for(let index = 0; index < couponsApiResult.length; index++) {
+          for (const property in couponsApiResult[index]) {
+            const value = couponsApiResult[index][property];
+            couponsApiResult[index][property] = value ? value.toString() : '';
+          } 
         }
+        dispatch({ type: 'FETCH_COUPONS', payload: couponsApiResult});
       })
       .catch((err) => {
         if (err.response) {

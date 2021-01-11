@@ -7,6 +7,7 @@ import EditMeal from './components/EditMeal';
 import CreateMeal from './components/CreateMeal';
 import EditMealRecipe from './components/EditMealRecipe';
 import PlansCoupons from './components/PlansCoupons';
+import Zones from './components/Zones';
 import OrdersIngredients from './components/OrdersIngredients';
 import Customers from './components/Customers';
 import GoogleAnalytics from './components/GoogleAnalytics';
@@ -46,6 +47,10 @@ function App() {
           <Route path='/plans-coupons'>
             {navBar}
             <PlansCoupons />
+          </Route>
+          <Route path='/zones'>
+            {navBar}
+            <Zones />
           </Route>
           <Route path='/order-ingredients'>
             {navBar}

@@ -56,10 +56,8 @@ function CreateMeal() {
     axios
       .get(`${BASE_URL}meals`)
       .then((response) => {
-        if(response.status === 200) {
-          const mealApiResult = response.data.result;
-          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
-        }
+        const mealApiResult = response.data.result;
+        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
       })
       .catch((err) => {
         if (err.response) {

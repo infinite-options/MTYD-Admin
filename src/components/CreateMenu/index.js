@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { formatTime } from '../../helperFuncs';
 import {
   Breadcrumb, Form, Button, Container, Row, Col, Table, Modal,
 } from 'react-bootstrap';
@@ -69,13 +70,6 @@ function reducer(state, action) {
     default:
       return state;
   }
-}
-
-// Expected input format: YYYY-MM-DD HH-MM-SS
-// Returned output format: YYYY-MM-DD HH:MM:SS
-// Used to compare time as date objects
-function formatTime(time) {
-  return `${time.slice(0, 13)}:${time.slice(14, 16)}:${time.slice(17, 19)}`;
 }
 
 function CreateMenu() {
@@ -151,10 +145,8 @@ function CreateMenu() {
     axios
       .get(`${BASE_URL}meals`)
       .then((response) => {
-        if(response.status === 200) {
-          const mealApiResult = response.data.result;
-          dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
-        }
+        const mealApiResult = response.data.result;
+        dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
       })
       .catch((err) => {
         if (err.response) {
@@ -331,13 +323,11 @@ function CreateMenu() {
                                         menu_uid: mealMenu.menu_uid,
                                       }
                                     })
-                                    .then((response) => {
-                                      if(response.status === 202) {
-                                        const newMenu = [...state.editedMenu];
-                                        newMenu.splice(mealMenuIndex, 1);
-                                        dispatch({ type: 'EDIT_MENU', payload: newMenu });
-                                        updateMenu();
-                                      }
+                                    .then(() => {
+                                      const newMenu = [...state.editedMenu];
+                                      newMenu.splice(mealMenuIndex, 1);
+                                      dispatch({ type: 'EDIT_MENU', payload: newMenu });
+                                      updateMenu();
                                     })
                                     .catch((err) => {
                                       if(err.response) {
@@ -360,10 +350,8 @@ function CreateMenu() {
                                 () => {
                                   axios
                                     .put(`${BASE_URL}menu`,mealMenu)
-                                    .then((response) => {
-                                      if(response.status === 201) {
+                                    .then(() => {
                                         updateMenu();
-                                      }
                                     })
                                     .catch((err) => {
                                       if(err.response) {
@@ -585,20 +573,18 @@ function CreateMenu() {
                 axios
                   .post(`${BASE_URL}menu`,newMenuItem)
                   .then((response) => {
-                    if(response.status === 201) {
-                      // Save New menu item with id on screen
-                      const newMenuId = response.data.meal_uid;
-                      const newMenuItemId = {
-                        ...newMenuItem,
-                        menu_uid: newMenuId,
-                      }
-                      const newEditedMenu = [...state.editedMenu];
-                      newEditedMenu.push(newMenuItemId)
-                      dispatch({ type: 'EDIT_MENU', payload: newEditedMenu });
-                      // Save menu item after switching to different date and back
-                      updateMenu();
-                      toggleAddMenu()
+                    // Save New menu item with id on screen
+                    const newMenuId = response.data.meal_uid;
+                    const newMenuItemId = {
+                      ...newMenuItem,
+                      menu_uid: newMenuId,
                     }
+                    const newEditedMenu = [...state.editedMenu];
+                    newEditedMenu.push(newMenuItemId)
+                    dispatch({ type: 'EDIT_MENU', payload: newEditedMenu });
+                    // Save menu item after switching to different date and back
+                    updateMenu();
+                    toggleAddMenu()
                   })
                   .catch((err) => {
                     if(err.response) {

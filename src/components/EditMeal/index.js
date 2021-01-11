@@ -72,6 +72,21 @@ function EditMeal() {
                 mealApiResult[index][property] = value ? value.toString() : '';
               } 
           }
+          // Sort by meal name
+          mealApiResult.sort((mealA, mealB) => {
+            const mealNameA = mealA.meal_name;
+            const mealNameB = mealB.meal_name;
+            if(mealNameA < mealNameB) {
+              return -1;
+            }
+            if(mealNameA > mealNameB) {
+              return 1;
+            }
+            // Use Id if same name; should not happen
+            const idA = mealA.meal_uid;
+            const idB = mealB.meal_uid;
+            return (idA < idB) ? -1 : 1;
+          });
           dispatch({ type: 'FETCH_MEALS', payload: mealApiResult });
         }
       })

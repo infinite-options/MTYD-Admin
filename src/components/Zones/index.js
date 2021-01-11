@@ -2,7 +2,7 @@ import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
 import {
-  Row, Col, Table, Modal, Form, Button
+  Breadcrumb, Container, Row, Col, Table, Modal, Form, Button
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -35,10 +35,16 @@ const initialState = {
     RB_long:'',
     RB_lat:'',
   },
+  businesses: [],
 };
 
 function reducer(state, action) {
   switch(action.type) {
+    case 'FETCH_BUSINESSES':
+      return {
+        ...state,
+        businesses: action.payload,
+      }
     case 'FETCH_ZONES':
       return {
         ...state,
@@ -78,6 +84,20 @@ function Zones () {
   const saveZone = () => {
     if(state.editedZone.zone_uid === '') {
       // Add New Zone
+      axios
+        .post(`${BASE_URL}update_zones/create`,state.editedZone)
+        .then((response) => {
+          // eslint-disable-next-line
+          console.log(response);
+        })
+        .catch((err) => {
+          if (err.response) {
+            // eslint-disable-next-line no-console
+            console.log(err.response);
+          }
+          // eslint-disable-next-line no-console
+          console.log(err);
+        });
     } else {
       // Edit current zone
       axios
@@ -129,105 +149,134 @@ function Zones () {
       });
   },[])
 
+  // Fetch businesses
+  useEffect(() => {
+    axios
+      .get(`${BASE_URL}all_businesses`)
+      .then((response) => {
+        const businessApiResult = response.data.result;
+        dispatch({ type: 'FETCH_BUSINESSES', payload: businessApiResult});
+
+      })
+      .catch((err) => {
+        if (err.response) {
+          // eslint-disable-next-line no-console
+          console.log(err.response);
+        }
+        // eslint-disable-next-line no-console
+        console.log(err);
+      });
+  },[])
+
   return (
-    <>
-      <Row
+    <div>
+      <Breadcrumb>
+        <Breadcrumb.Item href="/"> Admin Site </Breadcrumb.Item>
+        <Breadcrumb.Item active> Zones </Breadcrumb.Item>
+      </Breadcrumb>
+      <Container
         style={{
-          marginTop: '4rem',
-          marginBottom: '1rem',
+          maxWidth: 'inherit',
         }}
       >
-        <Col>
-          <h5>
-            Zones
-          </h5>
-        </Col>
-        <Col
+        <Row>
+          <Col>
+            <h5>
+              Zones
+            </h5>
+          </Col>
+          <Col
+            style={{
+              textAlign: 'right'
+            }}
+          >
+            <Button
+              onClick={() => {toggleEditZone(initialState.editedZone)}}
+            >
+              Add New Zone
+            </Button>
+          </Col>
+        </Row>
+        <Row
           style={{
-            textAlign: 'right'
+            marginTop: '1rem'
           }}
         >
-          <Button
-            onClick={() => {toggleEditZone(initialState.editedZone)}}
-          >
-            Add New Zone
-          </Button>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <Table>
-            <thead>
-              <tr>
-                <th> Zone Name </th>
-                <th> Area </th>
-                <th> Zone </th>
-                <th> Delivery Day </th>
-                <th> Delivery Time </th>
-                <th> Accepting Day </th>
-                <th> Accepting Time </th>
-                <th> Service Fee </th>
-                <th> Delivery Fee </th>
-                <th> Tax Rate </th>
-                <th> LB long </th>
-                <th> LB lat </th>
-                <th> LT long </th>
-                <th> LT lat </th>
-                <th> RB long </th>
-                <th> RB lat </th>
-                <th> RT long </th>
-                <th> RT lat </th>
-                <th> Action </th>
-              </tr>
-            </thead>
-            <tbody>
-            {
-              state.zones.map(
-                (zone) => {
-                  return (
-                    <tr
-                      key={zone.zone_uid}
-                    >
-                      <td> {zone.zone_name} </td>
-                      <td> {zone.area} </td>
-                      <td> {zone.zone} </td>
-                      <td> {zone.z_delivery_day} </td>
-                      <td> {zone.z_delivery_time} </td>
-                      <td> {zone.z_accepting_day} </td>
-                      <td> {zone.z_accepting_time} </td>
-                      <td> {zone.service_fee} </td>
-                      <td> {zone.delivery_fee} </td>
-                      <td> {zone.tax_rate} </td>
-                      <td> {zone.LB_long} </td>
-                      <td> {zone.LB_lat} </td>
-                      <td> {zone.LT_long} </td>
-                      <td> {zone.LT_lat} </td>
-                      <td> {zone.RB_long} </td>
-                      <td> {zone.RB_lat} </td>
-                      <td> {zone.RT_long} </td>
-                      <td> {zone.RT_lat} </td>
-                      <td>
-                          <button
-                            className={'icon-button'}
-                            onClick={() => {toggleEditZone(zone)}}
-                          >
-                            <FontAwesomeIcon
-                              icon={faEdit}
-                            />
-                          </button>
-                        </td>
-                    </tr>
-                  )
-                }
-              )
-            }
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
+          <Col>
+            <Table>
+              <thead>
+                <tr>
+                  <th> Zone Name </th>
+                  <th> Area </th>
+                  <th> Zone </th>
+                  <th> Delivery Day </th>
+                  <th> Delivery Time </th>
+                  <th> Accepting Day </th>
+                  <th> Accepting Time </th>
+                  <th> Service Fee </th>
+                  <th> Delivery Fee </th>
+                  <th> Tax Rate </th>
+                  <th> LB long </th>
+                  <th> LB lat </th>
+                  <th> LT long </th>
+                  <th> LT lat </th>
+                  <th> RB long </th>
+                  <th> RB lat </th>
+                  <th> RT long </th>
+                  <th> RT lat </th>
+                  <th> Action </th>
+                </tr>
+              </thead>
+              <tbody>
+              {
+                state.zones.map(
+                  (zone) => {
+                    return (
+                      <tr
+                        key={zone.zone_uid}
+                      >
+                        <td> {zone.zone_name} </td>
+                        <td> {zone.area} </td>
+                        <td> {zone.zone} </td>
+                        <td> {zone.z_delivery_day} </td>
+                        <td> {zone.z_delivery_time} </td>
+                        <td> {zone.z_accepting_day} </td>
+                        <td> {zone.z_accepting_time} </td>
+                        <td> {zone.service_fee} </td>
+                        <td> {zone.delivery_fee} </td>
+                        <td> {zone.tax_rate} </td>
+                        <td> {zone.LB_long} </td>
+                        <td> {zone.LB_lat} </td>
+                        <td> {zone.LT_long} </td>
+                        <td> {zone.LT_lat} </td>
+                        <td> {zone.RB_long} </td>
+                        <td> {zone.RB_lat} </td>
+                        <td> {zone.RT_long} </td>
+                        <td> {zone.RT_lat} </td>
+                        <td>
+                            <button
+                              className={'icon-button'}
+                              onClick={() => {toggleEditZone(zone)}}
+                            >
+                              <FontAwesomeIcon
+                                icon={faEdit}
+                              />
+                            </button>
+                          </td>
+                      </tr>
+                    )
+                  }
+                )
+              }
+              </tbody>
+            </Table>
+          </Col>
+        </Row>
+      </Container>
       <Modal
         show={state.editingZone}
         onHide={() => toggleEditZone(initialState.editedZone)}
+        size='lg'
         animation={false}
       >
         <Modal.Header closeButton>
@@ -450,7 +499,7 @@ function Zones () {
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   )
 }
 

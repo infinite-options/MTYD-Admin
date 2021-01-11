@@ -4,7 +4,6 @@ import {
 
 import Plans from './plans';
 import Coupons from './coupons';
-import Zones from './zones';
 
 function PlansCoupons() {
   return (
@@ -20,7 +19,6 @@ function PlansCoupons() {
       >
         <Plans />
         <Coupons />
-        <Zones />
       </Container>
     </div>
   )

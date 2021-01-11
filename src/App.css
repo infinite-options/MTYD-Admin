@@ -2,3 +2,8 @@
   background-color: inherit;
   border: none;
 }
+
+.novSpace {
+  margin: 0;
+  padding: 0;
+}
