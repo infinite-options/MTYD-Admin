@@ -83,9 +83,14 @@ function Zones () {
 
   const saveZone = () => {
     if(state.editedZone.zone_uid === '') {
+      const newZone = {
+        ...state.editedZone,
+        z_business_uid: '200-000001', 
+        z_businesses: [],
+      }
       // Add New Zone
       axios
-        .post(`${BASE_URL}update_zones/create`,state.editedZone)
+        .post(`${BASE_URL}update_zones/create`,newZone)
         .then((response) => {
           // eslint-disable-next-line
           console.log(response);
@@ -284,204 +289,256 @@ function Zones () {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group>
-              <Form.Label> Zone Name </Form.Label>
-              <Form.Control
-                value={state.editedZone.zone_name}
-                onChange={
-                  (event) => {
-                    editZone('zone_name',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Area </Form.Label>
-              <Form.Control
-                value={state.editedZone.area}
-                onChange={
-                  (event) => {
-                    editZone('area',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Zone </Form.Label>
-              <Form.Control
-                value={state.editedZone.zone}
-                onChange={
-                  (event) => {
-                    editZone('zone',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Delivery Day </Form.Label>
-              <Form.Control
-                value={state.editedZone.z_delivery_day}
-                onChange={
-                  (event) => {
-                    editZone('z_delivery_day',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Delivery Time </Form.Label>
-              <Form.Control
-                value={state.editedZone.z_delivery_time}
-                onChange={
-                  (event) => {
-                    editZone('z_delivery_time',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Accepting Day </Form.Label>
-              <Form.Control
-                value={state.editedZone.z_accepting_day}
-                onChange={
-                  (event) => {
-                    editZone('z_accepting_day',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Accepting Time </Form.Label>
-              <Form.Control
-                value={state.editedZone.z_accepting_time}
-                onChange={
-                  (event) => {
-                    editZone('z_accepting_time',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Service Fee </Form.Label>
-              <Form.Control
-                value={state.editedZone.service_fee}
-                onChange={
-                  (event) => {
-                    editZone('service_fee',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Delivery Fee </Form.Label>
-              <Form.Control
-                value={state.editedZone.delivery_fee}
-                onChange={
-                  (event) => {
-                    editZone('delivery_fee',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> Tax Rate </Form.Label>
-              <Form.Control
-                value={state.editedZone.tax_rate}
-                onChange={
-                  (event) => {
-                    editZone('tax_rate',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> LB long </Form.Label>
-              <Form.Control
-                value={state.editedZone.LB_long}
-                onChange={
-                  (event) => {
-                    editZone('LB_long',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> LB lat </Form.Label>
-              <Form.Control
-                value={state.editedZone.LB_lat}
-                onChange={
-                  (event) => {
-                    editZone('LB_lat',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> LT long </Form.Label>
-              <Form.Control
-                value={state.editedZone.LT_long}
-                onChange={
-                  (event) => {
-                    editZone('LT_long',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> LT lat </Form.Label>
-              <Form.Control
-                value={state.editedZone.LT_lat}
-                onChange={
-                  (event) => {
-                    editZone('LT_lat',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> RB long </Form.Label>
-              <Form.Control
-                value={state.editedZone.RB_long}
-                onChange={
-                  (event) => {
-                    editZone('RB_long',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> RB lat </Form.Label>
-              <Form.Control
-                value={state.editedZone.RB_lat}
-                onChange={
-                  (event) => {
-                    editZone('RB_lat',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> RT long </Form.Label>
-              <Form.Control
-                value={state.editedZone.RT_long}
-                onChange={
-                  (event) => {
-                    editZone('RT_long',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label> RT lat </Form.Label>
-              <Form.Control
-                value={state.editedZone.RT_lat}
-                onChange={
-                  (event) => {
-                    editZone('RT_lat',event.target.value);
-                  }
-                }
-              />
-            </Form.Group>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> Zone Name </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.zone_name}
+                    onChange={
+                      (event) => {
+                        editZone('zone_name',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md="3">
+                <Form.Group>
+                  <Form.Label> Area </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.area}
+                    onChange={
+                      (event) => {
+                        editZone('area',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md="3">
+                <Form.Group>
+                  <Form.Label> Zone </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.zone}
+                    onChange={
+                      (event) => {
+                        editZone('zone',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> Delivery Day </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.z_delivery_day}
+                    onChange={
+                      (event) => {
+                        editZone('z_delivery_day',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> Delivery Time </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.z_delivery_time}
+                    onChange={
+                      (event) => {
+                        editZone('z_delivery_time',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> Accepting Day </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.z_accepting_day}
+                    onChange={
+                      (event) => {
+                        editZone('z_accepting_day',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> Accepting Time </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.z_accepting_time}
+                    onChange={
+                      (event) => {
+                        editZone('z_accepting_time',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='4'>
+                <Form.Group>
+                  <Form.Label> Service Fee </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.service_fee}
+                    onChange={
+                      (event) => {
+                        editZone('service_fee',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='4'>
+                <Form.Group>
+                  <Form.Label> Delivery Fee </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.delivery_fee}
+                    onChange={
+                      (event) => {
+                        editZone('delivery_fee',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='4'>
+                <Form.Group>
+                  <Form.Label> Tax Rate </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.tax_rate}
+                    onChange={
+                      (event) => {
+                        editZone('tax_rate',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> LT lat </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.LT_lat}
+                    onChange={
+                      (event) => {
+                        editZone('LT_lat',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> RT lat </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.RT_lat}
+                    onChange={
+                      (event) => {
+                        editZone('RT_lat',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> LT long </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.LT_long}
+                    onChange={
+                      (event) => {
+                        editZone('LT_long',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> RT long </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.RT_long}
+                    onChange={
+                      (event) => {
+                        editZone('RT_long',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> LB lat </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.LB_lat}
+                    onChange={
+                      (event) => {
+                        editZone('LB_lat',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> RB lat </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.RB_lat}
+                    onChange={
+                      (event) => {
+                        editZone('RB_lat',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
+            <Form.Row>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> LB long </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.LB_long}
+                    onChange={
+                      (event) => {
+                        editZone('LB_long',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md='6'>
+                <Form.Group>
+                  <Form.Label> RB long </Form.Label>
+                  <Form.Control
+                    value={state.editedZone.RB_long}
+                    onChange={
+                      (event) => {
+                        editZone('RB_long',event.target.value);
+                      }
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Form.Row>
           </Form>
         </Modal.Body>
         <Modal.Footer>
