@@ -69,6 +69,32 @@ function reducer(state, action) {
 function Zones () {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const getZone = () => {
+    axios
+      .get(`${BASE_URL}get_Zones`)
+      .then((response) => {
+        if(response.status === 200) {
+          const zoneApiResult = response.data.result;
+          // Convert property values to string and nulls to empty string
+          for(let index = 0; index < zoneApiResult.length; index++) {
+            for (const property in zoneApiResult[index]) {
+              const value = zoneApiResult[index][property];
+              zoneApiResult[index][property] = value ? value.toString() : '';
+            } 
+          }
+          dispatch({ type: 'FETCH_ZONES', payload: zoneApiResult});
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          // eslint-disable-next-line no-console
+          console.log(err.response);
+        }
+        // eslint-disable-next-line no-console
+        console.log(err);
+      });
+  }
+
   const toggleEditZone = (initialZone) => {
     dispatch({ type: 'TOGGLE_EDIT_ZONE', payload: initialZone});
   }
@@ -91,9 +117,9 @@ function Zones () {
       // Add New Zone
       axios
         .post(`${BASE_URL}update_zones/create`,newZone)
-        .then((response) => {
-          // eslint-disable-next-line
-          console.log(response);
+        .then(() => {
+          getZone();
+          toggleEditZone(initialState.editedZone)
         })
         .catch((err) => {
           if (err.response) {
@@ -129,29 +155,7 @@ function Zones () {
 
   // Fetch Zones
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}get_Zones`)
-      .then((response) => {
-        if(response.status === 200) {
-          const zoneApiResult = response.data.result;
-          // Convert property values to string and nulls to empty string
-          for(let index = 0; index < zoneApiResult.length; index++) {
-            for (const property in zoneApiResult[index]) {
-              const value = zoneApiResult[index][property];
-              zoneApiResult[index][property] = value ? value.toString() : '';
-            } 
-          }
-          dispatch({ type: 'FETCH_ZONES', payload: zoneApiResult});
-        }
-      })
-      .catch((err) => {
-        if (err.response) {
-          // eslint-disable-next-line no-console
-          console.log(err.response);
-        }
-        // eslint-disable-next-line no-console
-        console.log(err);
-      });
+    getZone();
   },[])
 
   // Fetch businesses
