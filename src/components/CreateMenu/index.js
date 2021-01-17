@@ -8,7 +8,6 @@ import {
 import {
   Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
 } from '@material-ui/core';
-// import MaterialTable from 'material-table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrashAlt, faSave
@@ -220,11 +219,18 @@ function CreateMenu() {
   }
 
   const sortedMenu = () => {
-    const menuCopy = [...state.editedMenu];
+    // Stable sort so sorting twice does not change original order
+    const menuCopy = state.editedMenu.map((elt,index) => [elt, index]);
     menuCopy.sort(
-      sortComparator(state.sortEditMenu.field, state.sortEditMenu.direction)
+      (eltA, eltB) => {
+        const order = sortComparator(state.sortEditMenu.field, state.sortEditMenu.direction)(eltA[0],eltB[0]);
+        if(order !== 0) {
+          return order;
+        }
+        return eltA[1] - eltB[1]
+      }
     );
-    return menuCopy;
+    return menuCopy.map((elt) => elt[0]);
   }
 
   // Save Upodate menu item
@@ -275,7 +281,12 @@ function CreateMenu() {
         <Breadcrumb.Item href="/"> Admin Site </Breadcrumb.Item>
         <Breadcrumb.Item active> Create or Edit Menu </Breadcrumb.Item>
       </Breadcrumb>
-      <Container>
+      <Container
+        style={{
+          maxWidth: 'inherit',
+          padding: '0 8rem',
+        }}
+      >
         <Row>
           <Col sm="6">
             <Form>
@@ -351,7 +362,15 @@ function CreateMenu() {
                       Menu Category
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell> Default Meal </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMenu.field === 'default_meal'}
+                      direction={state.sortEditMenu.field === 'default_meal' ? state.sortEditMenu.direction : 'asc'}
+                      onClick={() => changeSortOptions('default_meal')}
+                    >
+                      Default Meal
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell> Actions </TableCell>
                 </TableRow>
               </TableHead>
@@ -462,117 +481,6 @@ function CreateMenu() {
             </Table>
           </Col>
         </Row>
-        {
-          // Alternative idea to use MaterialTable; does not allow edits
-        }
-        {/* <Row>
-          <Col>
-            <MaterialTable
-              columns={[
-                {
-                  title: 'Meal Type',
-                  field: 'menu_type',
-                },
-                {
-                  title: 'Meal',
-                  field: 'meal_uid',
-                  render: (mealMenu) => {
-                    return (
-                      <Form>
-                        <Form.Control
-                          as="select"
-                          value={mealMenu.meal_uid}
-                          onChange={
-                            (event) => {
-                              const newMenu = [...state.editedMenu];
-                              const newMealId = event.target.value;
-                              const newMealInfo = state.mealData
-                                .filter((meal) => meal.meal_uid === newMealId)[0];
-                              const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.meal_uid);
-                              newMenu[mealMenuIndex] = {
-                                ...newMenu[mealMenuIndex],
-                                ...newMealInfo,
-                                menu_meal_id: newMealId,
-                              };
-                              dispatch({ type: 'EDIT_MENU', payload: newMenu });
-                            }
-                          }
-                        >
-                          {
-                            getMealsByCategory(mealMenu.meal_category).map(
-                              (meal) => (
-                                <option value={meal.meal_uid} key={meal.meal_uid}>
-                                  {meal.meal_name}
-                                </option>
-                              ),
-                            )
-                          }
-                        </Form.Control>
-                      </Form>
-                    );
-                  }
-                },
-                {
-                  title: 'Meal Category',
-                  field: 'meal_cat',
-                },
-                {
-                  title: 'Menu Category',
-                  field: 'menu_category',
-                },
-                {
-                  title: 'Default Meal',
-                  field: 'default_meal',
-                  render: (mealMenu) => {
-                    return (
-                      <Form>
-                        <Form.Control
-                          as="select"
-                          value={mealMenu.default_meal}
-                          onChange={
-                            (event) => {
-                              const newMenu = [...state.editedMenu];
-                              const newDefaultMeal = event.target.value;
-                              const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.meal_uid);
-                              newMenu[mealMenuIndex] = {
-                                ...newMenu[mealMenuIndex],
-                                default_meal: newDefaultMeal,
-                              };
-                              dispatch({ type: 'EDIT_MENU', payload: newMenu });
-                            }
-                          }
-                        >
-                          <option value="FALSE"> FALSE </option>
-                          <option value="TRUE"> TRUE </option>
-                        </Form.Control>
-                      </Form>
-                    )
-                  }
-                },
-              ]}
-              actions={[
-                {
-                  icon: () => <FontAwesomeIcon icon={faSave} />,
-                  tooltip: 'Save Menu Item',
-                  onClick: (_event,mealMenu) => {
-                    updateMenuItem(mealMenu);
-                  }
-                },
-                {
-                  icon: () => <FontAwesomeIcon icon={faTrashAlt} />,
-                  tooltip: 'Delete Menu Item',
-                  onClick: (_event,mealMenu) => {
-                    deleteMenuItem(mealMenu.menu_uid);
-                  }
-                }
-              ]}
-              data={state.editedMenu}
-              options={{
-                actionsColumnIndex: -1
-              }}
-            />
-          </Col>
-        </Row> */}
       </Container>
       <Modal
         show={state.showAddMeal}
