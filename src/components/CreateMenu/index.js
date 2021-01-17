@@ -3,8 +3,12 @@ import axios from 'axios';
 import { BASE_URL } from '../../constants';
 import { formatTime } from '../../helperFuncs';
 import {
-  Breadcrumb, Form, Button, Container, Row, Col, Table, Modal,
+  Breadcrumb, Form, Button, Container, Row, Col, Modal,
 } from 'react-bootstrap';
+import {
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
+} from '@material-ui/core';
+// import MaterialTable from 'material-table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrashAlt, faSave
@@ -14,6 +18,10 @@ const initialState = {
   menuData: [],
   menuDate: '',
   editedMenu: [],
+  sortEditMenu: {
+    field: '',
+    direction: '',
+  },
   mealData: [],
   showAddMeal: false,
   newMeal: {
@@ -47,6 +55,14 @@ function reducer(state, action) {
         ...state,
         mealData: action.payload,
       };
+    case 'SORT_MENU':
+      return {
+        ...state,
+        sortEditMenu: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
+      }
     case 'EDIT_MENU':
       return {
         ...state,
@@ -170,6 +186,89 @@ function CreateMenu() {
     dispatch({ type: 'TOGGLE_ADD_MENU_ITEM' });
   };
 
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortEditMenu.field == field && state.sortEditMenu.direction === 'asc');
+    dispatch({
+      type: 'SORT_MENU',
+      payload: {
+        field: field,
+        direction: isAsc ? 'desc' : 'asc',
+      },
+    });
+  }
+
+  const descendingComparator = (eltA, eltB, field) => {
+    if(eltA[field] > eltB[field]) {
+      return -1;
+    } else if(eltA[field] < eltB[field]) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  const sortComparator = (field,direction) => {
+    if(direction === 'desc') {
+      return (eltA, eltB) => {
+        return descendingComparator(eltA,eltB,field);
+      } 
+    } else {
+      return (eltA, eltB) => {
+        return -descendingComparator(eltA,eltB,field);
+      } 
+    }
+  }
+
+  const sortedMenu = () => {
+    const menuCopy = [...state.editedMenu];
+    menuCopy.sort(
+      sortComparator(state.sortEditMenu.field, state.sortEditMenu.direction)
+    );
+    return menuCopy;
+  }
+
+  // Save Upodate menu item
+  const updateMenuItem = (menuItem) => {
+    axios
+      .put(`${BASE_URL}menu`,menuItem)
+      .then(() => {
+          updateMenu();
+      })
+      .catch((err) => {
+        if(err.response) {
+          // eslint-disable-next-line no-console
+          console.log(err.response)
+        }
+        // eslint-disable-next-line no-console
+        console.log(err)
+      })
+  }
+
+  // Delete menu item
+  const deleteMenuItem = (menuId) => {
+    axios
+      .delete(`${BASE_URL}menu`,{
+        params: {
+          menu_uid: menuId,
+        }
+      })
+      .then(() => {
+        const newMenu = [...state.editedMenu];
+        const menuIndex = newMenu.findIndex((elt) => elt.menu_uid === menuId);
+        newMenu.splice(menuIndex, 1);
+        dispatch({ type: 'EDIT_MENU', payload: newMenu });
+        updateMenu();
+      })
+      .catch((err) => {
+        if(err.response) {
+          // eslint-disable-next-line no-console
+          console.log(err.response)
+        }
+        // eslint-disable-next-line no-console
+        console.log(err)
+      })
+  }
+
   return (
     <div>
       <Breadcrumb>
@@ -218,41 +317,55 @@ function CreateMenu() {
               Add Menu Item
             </Button>
           </Col>
-          {/* 
-            Don't need save all button for now, if activated, remove offset in add menu item
-          <Col
-            sm="3"
-            style={{
-              textAlign: 'right',
-            }}
-          >
-            <Button variant="primary">Save</Button>
-          </Col> */}
         </Row>
         <Row>
           <Col>
-            <Table striped hover>
-              <thead>
-                <tr>
-                  <th> Meal Type </th>
-                  <th> Meal </th>
-                  <th> Meal Category </th>
-                  <th> Menu Category </th>
-                  <th> Default Meal </th>
-                  <th> Actions </th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMenu.field === 'menu_type'}
+                      direction={state.sortEditMenu.field === 'menu_type' ? state.sortEditMenu.direction: 'asc'}
+                      onClick={() => changeSortOptions('menu_type')}
+                    >
+                      Meal Type
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell> Meal </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMenu.field === 'meal_cat'}
+                      direction={state.sortEditMenu.field === 'meal_cat' ? state.sortEditMenu.direction : 'asc'}
+                      onClick={() => changeSortOptions('meal_cat')}
+                    >
+                      Meal Category
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMenu.field === 'menu_category'}
+                      direction={state.sortEditMenu.field === 'menu_category' ? state.sortEditMenu.direction : 'asc'}
+                      onClick={() => changeSortOptions('menu_category')}
+                    >
+                      Menu Category
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell> Default Meal </TableCell>
+                  <TableCell> Actions </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {
-                  state.editedMenu.map(
-                    (mealMenu, mealMenuIndex) => {
+                  sortedMenu().map(
+                    (mealMenu) => {
                       const otherMealCategories = getMealsByCategory(mealMenu.meal_category);
                       return (
-                        <tr key={`${mealMenuIndex} ${mealMenu.menu_uid}`}>
-                          <td>
+                        <TableRow key={mealMenu.menu_uid}>
+                          <TableCell>
                             {mealMenu.menu_type}
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             <Form>
                               <Form.Control
                                 as="select"
@@ -263,6 +376,7 @@ function CreateMenu() {
                                     const newMealId = event.target.value;
                                     const newMealInfo = state.mealData
                                       .filter((meal) => meal.meal_uid === newMealId)[0];
+                                    const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.menu_uid);
                                     newMenu[mealMenuIndex] = {
                                       ...newMenu[mealMenuIndex],
                                       ...newMealInfo,
@@ -283,14 +397,14 @@ function CreateMenu() {
                                 }
                               </Form.Control>
                             </Form>
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             {mealMenu.meal_cat}
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             {mealMenu.menu_category}
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             <Form>
                               <Form.Control
                                 as="select"
@@ -299,6 +413,7 @@ function CreateMenu() {
                                   (event) => {
                                     const newMenu = [...state.editedMenu];
                                     const newDefaultMeal = event.target.value;
+                                    const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.menu_uid);
                                     newMenu[mealMenuIndex] = {
                                       ...newMenu[mealMenuIndex],
                                       default_meal: newDefaultMeal,
@@ -311,32 +426,13 @@ function CreateMenu() {
                                 <option value="TRUE"> TRUE </option>
                               </Form.Control>
                             </Form>
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             <button
                               className={'icon-button'}
                               onClick={
                                 () => {
-                                  axios
-                                    .delete(`${BASE_URL}menu`,{
-                                      params: {
-                                        menu_uid: mealMenu.menu_uid,
-                                      }
-                                    })
-                                    .then(() => {
-                                      const newMenu = [...state.editedMenu];
-                                      newMenu.splice(mealMenuIndex, 1);
-                                      dispatch({ type: 'EDIT_MENU', payload: newMenu });
-                                      updateMenu();
-                                    })
-                                    .catch((err) => {
-                                      if(err.response) {
-                                        // eslint-disable-next-line no-console
-                                        console.log(err.response)
-                                      }
-                                      // eslint-disable-next-line no-console
-                                      console.log(err)
-                                    })
+                                  deleteMenuItem(mealMenu.menu_uid);
                                 }
                               }
                             >
@@ -348,19 +444,7 @@ function CreateMenu() {
                               className={'icon-button'}
                               onClick={
                                 () => {
-                                  axios
-                                    .put(`${BASE_URL}menu`,mealMenu)
-                                    .then(() => {
-                                        updateMenu();
-                                    })
-                                    .catch((err) => {
-                                      if(err.response) {
-                                        // eslint-disable-next-line no-console
-                                        console.log(err.response)
-                                      }
-                                      // eslint-disable-next-line no-console
-                                      console.log(err)
-                                    })
+                                  updateMenuItem(mealMenu);
                                 }
                               }
                             >
@@ -368,16 +452,127 @@ function CreateMenu() {
                                 icon={faSave}
                               />
                             </button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     },
                   )
                 }
-              </tbody>
+              </TableBody>
             </Table>
           </Col>
         </Row>
+        {
+          // Alternative idea to use MaterialTable; does not allow edits
+        }
+        {/* <Row>
+          <Col>
+            <MaterialTable
+              columns={[
+                {
+                  title: 'Meal Type',
+                  field: 'menu_type',
+                },
+                {
+                  title: 'Meal',
+                  field: 'meal_uid',
+                  render: (mealMenu) => {
+                    return (
+                      <Form>
+                        <Form.Control
+                          as="select"
+                          value={mealMenu.meal_uid}
+                          onChange={
+                            (event) => {
+                              const newMenu = [...state.editedMenu];
+                              const newMealId = event.target.value;
+                              const newMealInfo = state.mealData
+                                .filter((meal) => meal.meal_uid === newMealId)[0];
+                              const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.meal_uid);
+                              newMenu[mealMenuIndex] = {
+                                ...newMenu[mealMenuIndex],
+                                ...newMealInfo,
+                                menu_meal_id: newMealId,
+                              };
+                              dispatch({ type: 'EDIT_MENU', payload: newMenu });
+                            }
+                          }
+                        >
+                          {
+                            getMealsByCategory(mealMenu.meal_category).map(
+                              (meal) => (
+                                <option value={meal.meal_uid} key={meal.meal_uid}>
+                                  {meal.meal_name}
+                                </option>
+                              ),
+                            )
+                          }
+                        </Form.Control>
+                      </Form>
+                    );
+                  }
+                },
+                {
+                  title: 'Meal Category',
+                  field: 'meal_cat',
+                },
+                {
+                  title: 'Menu Category',
+                  field: 'menu_category',
+                },
+                {
+                  title: 'Default Meal',
+                  field: 'default_meal',
+                  render: (mealMenu) => {
+                    return (
+                      <Form>
+                        <Form.Control
+                          as="select"
+                          value={mealMenu.default_meal}
+                          onChange={
+                            (event) => {
+                              const newMenu = [...state.editedMenu];
+                              const newDefaultMeal = event.target.value;
+                              const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.meal_uid);
+                              newMenu[mealMenuIndex] = {
+                                ...newMenu[mealMenuIndex],
+                                default_meal: newDefaultMeal,
+                              };
+                              dispatch({ type: 'EDIT_MENU', payload: newMenu });
+                            }
+                          }
+                        >
+                          <option value="FALSE"> FALSE </option>
+                          <option value="TRUE"> TRUE </option>
+                        </Form.Control>
+                      </Form>
+                    )
+                  }
+                },
+              ]}
+              actions={[
+                {
+                  icon: () => <FontAwesomeIcon icon={faSave} />,
+                  tooltip: 'Save Menu Item',
+                  onClick: (_event,mealMenu) => {
+                    updateMenuItem(mealMenu);
+                  }
+                },
+                {
+                  icon: () => <FontAwesomeIcon icon={faTrashAlt} />,
+                  tooltip: 'Delete Menu Item',
+                  onClick: (_event,mealMenu) => {
+                    deleteMenuItem(mealMenu.menu_uid);
+                  }
+                }
+              ]}
+              data={state.editedMenu}
+              options={{
+                actionsColumnIndex: -1
+              }}
+            />
+          </Col>
+        </Row> */}
       </Container>
       <Modal
         show={state.showAddMeal}
