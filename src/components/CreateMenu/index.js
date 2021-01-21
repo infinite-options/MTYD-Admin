@@ -1,7 +1,7 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
-import { formatTime } from '../../helperFuncs';
+import { formatTime, sortedArray } from '../../helperFuncs';
 import {
   Breadcrumb, Form, Button, Container, Row, Col, Modal,
 } from 'react-bootstrap';
@@ -177,7 +177,8 @@ function CreateMenu() {
   const changeDate = (newDate) => {
     dispatch({ type: 'CHANGE_DATE', payload: newDate });
     const curMenu = getMenuData(newDate);
-    dispatch({ type: 'EDIT_MENU', payload: curMenu });
+    const sortedMenu = sortedArray(curMenu, state.sortEditMenu.field, state.sortEditMenu.direction);
+    dispatch({ type: 'EDIT_MENU', payload: sortedMenu });
   };
 
   // Toggle Add Menu modal
@@ -186,51 +187,17 @@ function CreateMenu() {
   };
 
   const changeSortOptions = (field) => {
-    const isAsc = (state.sortEditMenu.field == field && state.sortEditMenu.direction === 'asc');
+    const isAsc = (state.sortEditMenu.field === field && state.sortEditMenu.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
     dispatch({
       type: 'SORT_MENU',
       payload: {
         field: field,
-        direction: isAsc ? 'desc' : 'asc',
-      },
-    });
-  }
-
-  const descendingComparator = (eltA, eltB, field) => {
-    if(eltA[field] > eltB[field]) {
-      return -1;
-    } else if(eltA[field] < eltB[field]) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-  const sortComparator = (field,direction) => {
-    if(direction === 'desc') {
-      return (eltA, eltB) => {
-        return descendingComparator(eltA,eltB,field);
-      } 
-    } else {
-      return (eltA, eltB) => {
-        return -descendingComparator(eltA,eltB,field);
-      } 
-    }
-  }
-
-  const sortedMenu = () => {
-    // Stable sort so sorting twice does not change original order
-    const menuCopy = state.editedMenu.map((elt,index) => [elt, index]);
-    menuCopy.sort(
-      (eltA, eltB) => {
-        const order = sortComparator(state.sortEditMenu.field, state.sortEditMenu.direction)(eltA[0],eltB[0]);
-        if(order !== 0) {
-          return order;
-        }
-        return eltA[1] - eltB[1]
+        direction: direction,
       }
-    );
-    return menuCopy.map((elt) => elt[0]);
+    });
+    const sortedMenu = sortedArray(state.editedMenu, field, direction);
+    dispatch({ type: 'EDIT_MENU', payload: sortedMenu });
   }
 
   // Save Upodate menu item
@@ -376,11 +343,14 @@ function CreateMenu() {
               </TableHead>
               <TableBody>
                 {
-                  sortedMenu().map(
-                    (mealMenu) => {
+                  state.editedMenu.map(
+                    (mealMenu, mealMenuIndex) => {
                       const otherMealCategories = getMealsByCategory(mealMenu.meal_category);
                       return (
-                        <TableRow key={mealMenu.menu_uid}>
+                        <TableRow
+                          key={mealMenu.menu_uid}
+                          hover
+                        >
                           <TableCell>
                             {mealMenu.menu_type}
                           </TableCell>
@@ -395,7 +365,7 @@ function CreateMenu() {
                                     const newMealId = event.target.value;
                                     const newMealInfo = state.mealData
                                       .filter((meal) => meal.meal_uid === newMealId)[0];
-                                    const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.menu_uid);
+                                    // const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.menu_uid);
                                     newMenu[mealMenuIndex] = {
                                       ...newMenu[mealMenuIndex],
                                       ...newMealInfo,
@@ -432,7 +402,7 @@ function CreateMenu() {
                                   (event) => {
                                     const newMenu = [...state.editedMenu];
                                     const newDefaultMeal = event.target.value;
-                                    const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.menu_uid);
+                                    // const mealMenuIndex = newMenu.findIndex((elt) => elt.menu_uid === mealMenu.menu_uid);
                                     newMenu[mealMenuIndex] = {
                                       ...newMenu[mealMenuIndex],
                                       default_meal: newDefaultMeal,

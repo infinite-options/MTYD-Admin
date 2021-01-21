@@ -1,9 +1,13 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import {
-  Breadcrumb, Form, Container, Row, Col, Table, Button
+  Breadcrumb, Form, Container, Row, Col, Button
 } from 'react-bootstrap';
+import {
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell,
+} from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrashAlt, faSave
@@ -16,6 +20,10 @@ const initialState = {
   selectedMeal: '',
   mealIngredients: [],
   editedMealIngredients: [],
+  sortEditMealIngredients: {
+    field: '',
+    direction: '',
+  },
   newIngredient: {
     ingredient_desc: '',
     package_size: '',
@@ -58,6 +66,14 @@ function reducer (state, action) {
         mealIngredients: action.payload,
         editedMealIngredients: action.payload,
       };
+    case 'SORT_MEAL_INGREDIENTS':
+      return {
+        ...state,
+        sortEditMealIngredients: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
+      }
     case 'EDIT_MEAL_INGREDIENTS':
       return {
         ...state,
@@ -153,7 +169,8 @@ function EditMealRecipe() {
               mealIngredients[index][property] = value ? value.toString() : '';
             } 
           }
-          dispatch({ type: 'FETCH_MEAL_INGREDIENTS', payload: mealIngredients });
+          const sortedMealIngredients = sortedArray(mealIngredients,state.sortEditMealIngredients.field,state.sortEditMealIngredients.direction);
+          dispatch({ type: 'FETCH_MEAL_INGREDIENTS', payload: sortedMealIngredients });
         })
         .catch((err) => {
           if (err.response) {
@@ -167,6 +184,20 @@ function EditMealRecipe() {
     // Call when changing meal: state.selectedMeal
     // Or to retrieve recipe_uids of just added meals: state.mealData
   },[state.selectedMeal,state.mealData])
+
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortEditMealIngredients.field === field && state.sortEditMealIngredients.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_MEAL_INGREDIENTS',
+      payload: {
+        field: field,
+        direction: direction,
+      },
+    });
+    const sortedMealIngredients = sortedArray(state.editedMealIngredients,field,direction);
+    dispatch({ type: 'EDIT_MEAL_INGREDIENTS', payload: sortedMealIngredients });
+  }
 
   const editNewIngredient = (property,value) => {
     const newIngredient = {
@@ -312,22 +343,49 @@ function EditMealRecipe() {
         </Row>
         <Row>
           <Col>
-            <Table striped hover>
-              <thead>
-                <tr>
-                  <th> Ingredient </th>
-                  <th> Quanity </th>
-                  <th> Units </th>
-                  <th> Actions </th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMealIngredients.field === 'ingredient_desc'}
+                      direction={state.sortEditMealIngredients.field === 'ingredient_desc' ? state.sortEditMealIngredients.direction : 'asc'}
+                      onClick={() => changeSortOptions('ingredient_desc')}
+                    >
+                      Ingredient
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMealIngredients.field === 'recipe_ingredient_qty'}
+                      direction={state.sortEditMealIngredients.field === 'recipe_ingredient_qty' ? state.sortEditMealIngredients.direction : 'asc'}
+                      onClick={() => changeSortOptions('recipe_ingredient_qty')}
+                    >
+                      Quanity
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortEditMealIngredients.field === 'recipe_unit'}
+                      direction={state.sortEditMealIngredients.field === 'recipe_unit' ? state.sortEditMealIngredients.direction : 'asc'}
+                      onClick={() => changeSortOptions('recipe_unit')}
+                    >
+                      Units
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell> Actions </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {
                   state.editedMealIngredients.map(
                     (ingredient, ingredientIndex) => {
                       return (
-                        <tr key={ingredientIndex}>
-                          <td>
+                        <TableRow
+                          key={ingredientIndex}
+                          hover
+                        >
+                          <TableCell>
                             <Form.Control
                               as='select'
                               value={ingredient.ingredient_uid}
@@ -337,6 +395,7 @@ function EditMealRecipe() {
                                   const newIngredientId = event.target.value;
                                   const newIngredientInfo = state.ingredientsData
                                       .filter((allIngredients) => allIngredients.ingredient_uid === newIngredientId)[0];
+                                  const ingredientIndex = newRecipe.findIndex((elt) => elt.ingredient_uid === ingredient.ingredient_uid);
                                   newRecipe[ingredientIndex] = {
                                     ...newRecipe[ingredientIndex],
                                     ...newIngredientInfo,
@@ -359,8 +418,8 @@ function EditMealRecipe() {
                                 )
                               }
                             </Form.Control>
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             <Form.Control
                               type="number"
                               value={ingredient.recipe_ingredient_qty}
@@ -368,6 +427,7 @@ function EditMealRecipe() {
                                 (event) => {
                                   const newRecipe = [...state.editedMealIngredients];
                                   const newQuantity = event.target.value;
+                                  const ingredientIndex = newRecipe.findIndex((elt) => elt.ingredient_uid === ingredient.ingredient_uid);
                                   newRecipe[ingredientIndex] = {
                                     ...newRecipe[ingredientIndex],
                                     recipe_ingredient_qty: newQuantity,
@@ -376,8 +436,8 @@ function EditMealRecipe() {
                                 }
                               }
                             />
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             <Form.Control
                               as='select'
                               value={ingredient.measure_unit_uid}
@@ -387,6 +447,7 @@ function EditMealRecipe() {
                                   const newMeasureUnitId = event.target.value;
                                   const newMeasureUnitInfo = state.measureUnitsData
                                       .filter((allMeasureUnits) => allMeasureUnits.measure_unit_uid === newMeasureUnitId)[0];
+                                  const ingredientIndex = newRecipe.findIndex((elt) => elt.ingredient_uid === ingredient.ingredient_uid);
                                   newRecipe[ingredientIndex] = {
                                     ...newRecipe[ingredientIndex],
                                     ...newMeasureUnitInfo,
@@ -409,14 +470,15 @@ function EditMealRecipe() {
                                 )
                               }
                             </Form.Control>
-                          </td>
-                          <td>
+                          </TableCell>
+                          <TableCell>
                             <button
                                 className={'icon-button'}
                                 onClick={
                                   () => {
                                     const removeIngredient = () => {
                                       const newRecipe = [...state.editedMealIngredients];
+                                      const ingredientIndex = newRecipe.findIndex((elt) => elt.ingredient_uid === ingredient.ingredient_uid);
                                       newRecipe.splice(ingredientIndex,1);
                                       dispatch({ type: 'EDIT_MEAL_INGREDIENTS', payload: newRecipe });
                                       updateMeals();
@@ -512,13 +574,13 @@ function EditMealRecipe() {
                                 icon={faSave}
                               />
                             </button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       )
                     }
                   )
                 }
-              </tbody>
+              </TableBody>
             </Table>
           </Col>
         </Row>
@@ -536,17 +598,17 @@ function EditMealRecipe() {
         <Row>
           <Col>
             <Table>
-              <thead>
-                <tr>
-                  <th> Ingredient </th>
-                  <th> Package Size </th>
-                  <th> Package Unit </th>
-                  <th> Package Cost </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
+              <TableHead>
+                <TableRow>
+                  <TableCell> Ingredient </TableCell>
+                  <TableCell> Package Size </TableCell>
+                  <TableCell> Package Unit </TableCell>
+                  <TableCell> Package Cost </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
                     <Form.Control
                       type="text"
                       value={state.newIngredient.ingredient_desc}
@@ -556,8 +618,8 @@ function EditMealRecipe() {
                         }
                       }
                     />
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Form.Control
                       type="number"
                       value={state.newIngredient.package_size}
@@ -567,8 +629,8 @@ function EditMealRecipe() {
                         }
                       }
                     />
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Form.Control
                       as='select'
                       value={state.newIngredient.package_unit}
@@ -592,8 +654,8 @@ function EditMealRecipe() {
                         )
                       }
                     </Form.Control>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Form.Control
                       type="number"
                       value={state.newIngredient.package_cost}
@@ -603,9 +665,9 @@ function EditMealRecipe() {
                         }
                       }
                     />
-                  </td>
-                </tr>
-              </tbody>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             </Table>
           </Col>
         </Row>
@@ -633,17 +695,17 @@ function EditMealRecipe() {
         <Row>
           <Col>
             <Table>
-              <thead>
-                <tr>
-                  <th> Type </th>
-                  <th> Unit Name </th>
-                  <th> Conversion Ratio </th>
-                  <th> Base Unit </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
+              <TableHead>
+                <TableRow>
+                  <TableCell> Type </TableCell>
+                  <TableCell> Unit Name </TableCell>
+                  <TableCell> Conversion Ratio </TableCell>
+                  <TableCell> Base Unit </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
                     <Form.Control
                       as='select'
                       value={state.newMeasureUnit.type}
@@ -659,8 +721,8 @@ function EditMealRecipe() {
                       <option value='length'> Length </option>
                       <option value='each'> Each </option>
                     </Form.Control>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Row>
                       <Col sm='10'>
                         <Form.Control
@@ -677,8 +739,8 @@ function EditMealRecipe() {
                         =
                       </Col>
                     </Row>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Form.Control
                       type="number"
                       value={state.newMeasureUnit.conversion_ratio}
@@ -688,12 +750,12 @@ function EditMealRecipe() {
                         }
                       }
                     />
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {state.newMeasureUnit.common_unit}
-                  </td>
-                </tr>
-              </tbody>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             </Table>
           </Col>
         </Row>

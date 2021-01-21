@@ -2,12 +2,17 @@ import { useContext, useEffect, useReducer } from 'react';
 import { CustomerContext } from './customerContext';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import {
-  Table
-} from 'react-bootstrap';
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
+} from '@material-ui/core';
 
 const initialState = {
-  payments: []
+  payments: [],
+  sortPayment: {
+    field: '',
+    direction: '',
+  }
 }
 
 function reducer(state, action) {
@@ -16,6 +21,14 @@ function reducer(state, action) {
       return {
         ...state,
         payments: action.payload,
+      }
+    case 'SORT_PAYMENTS':
+      return {
+        ...state,
+        sortPayment: {
+          field: '',
+          direction: '',
+        }
       }
     default:
       return state
@@ -49,42 +62,105 @@ function AllPayments() {
     }
   },[customerContext.state.purchaseId])
 
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortPayment.field === field && state.sortPayment.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_PAYMENTS',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedPayment = sortedArray(state.payments, field, direction);
+    dispatch({ type: 'FETCH_PAYMENTS', payload: sortedPayment})
+  }
+
   return (
     <>
       <h5> All Payments </h5>
-      <Table striped hover>
-        <thead>
-          <tr>
-            <td> Payment Id </td>
-            <td> Meal Plan Description </td>
-            <td> Amount Due </td>
-            <td> Amount Paid </td>
-            <td> Payment Time Stamp </td>
-            <td> Payment Type </td>
-            <td> Addon </td>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortPayment.field === 'payment_uid'}
+                direction={state.sortPayment.field === 'payment_uid' ? state.sortPayment.direction : 'asc'}
+                onClick={() => changeSortOptions('payment_uid')}
+              >
+                Payment Id
+              </TableSortLabel>
+            </TableCell>
+            <TableCell> Meal Plan Description </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortPayment.field === 'amount_due'}
+                direction={state.sortPayment.field === 'amount_due' ? state.sortPayment.direction : 'asc'}
+                onClick={() => changeSortOptions('amount_due')}
+              >
+                Amount Due
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortPayment.field === 'amount_paid'}
+                direction={state.sortPayment.field === 'amount_paid' ? state.sortPayment.direction : 'asc'}
+                onClick={() => changeSortOptions('amount_paid')}
+              >
+                Amount Paid
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortPayment.field === 'payment_time_stamp'}
+                direction={state.sortPayment.field === 'payment_time_stamp' ? state.sortPayment.direction : 'asc'}
+                onClick={() => changeSortOptions('payment_time_stamp')}
+              >
+                Payment Time Stamp
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortPayment.field === 'payment_type'}
+                direction={state.sortPayment.field === 'payment_type' ? state.sortPayment.direction : 'asc'}
+                onClick={() => changeSortOptions('payment_type')}
+              >
+                Payment Type
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortPayment.field === 'info_is_Addon'}
+                direction={state.sortPayment.field === 'info_is_Addon' ? state.sortPayment.direction : 'asc'}
+                onClick={() => changeSortOptions('info_is_Addon')}
+              >
+                Addon
+              </TableSortLabel>
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {
             state.payments.map(
               (payment) => {
                 return (
-                  <tr
+                  <TableRow
                     key={payment.payment_uid}
+                    hover
                   >
-                    <td> {payment.payment_uid} </td>
-                    <td> {payment.items[0].name} </td>
-                    <td> {payment.amount_due} </td>
-                    <td> {payment.amount_paid} </td>
-                    <td> {payment.payment_time_stamp} </td>
-                    <td> {payment.payment_type} </td>
-                    <td> {payment.info_is_Addon} </td>
-                  </tr>
+                    <TableCell> {payment.payment_uid} </TableCell>
+                    <TableCell> {payment.items[0].name} </TableCell>
+                    <TableCell> {payment.amount_due} </TableCell>
+                    <TableCell> {payment.amount_paid} </TableCell>
+                    <TableCell> {payment.payment_time_stamp} </TableCell>
+                    <TableCell> {payment.payment_type} </TableCell>
+                    <TableCell> {payment.info_is_Addon} </TableCell>
+                  </TableRow>
                 )
               }
             )
           }
-        </tbody>
+        </TableBody>
       </Table>
     </>
   )

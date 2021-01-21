@@ -2,12 +2,17 @@ import { useContext, useEffect, useReducer } from 'react';
 import { CustomerContext } from './customerContext';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import {
-  Table
-} from 'react-bootstrap';
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
+} from '@material-ui/core';
 
 const initialState = {
-  customerActivity: []
+  customerActivity: [],
+  sortActivity: {
+    field: '',
+    direction: '',
+  },
 }
 
 function reducer(state, action) {
@@ -16,6 +21,14 @@ function reducer(state, action) {
       return {
         ...state,
         customerActivity: action.payload,
+      }
+    case 'SORT_CUSTOMER':
+      return {
+        ...state,
+        sortActivity: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
       }
     default:
       return state
@@ -57,6 +70,20 @@ function LatestActivity() {
     }
   },[customerContext.state.customerId])
 
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortActivity.field === field && state.sortActivity.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_CUSTOMER',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedActivity = sortedArray(state.customerActivity, field, direction);
+    dispatch({ type: 'FETCH_CUSTOMER_ACTIVITY', payload: sortedActivity})
+  }
+
   const selectPurchase = (activity) => {
     const payload = {
       purchaseId: activity.purchase_uid,
@@ -67,60 +94,155 @@ function LatestActivity() {
 
   return (
     <>
-      <Table hover>
-        <thead>
-          <tr>
-            <th> Email </th>
-            <th> Phone </th>
-            <th> Purchase Id </th>
-            <th> Purchase Status </th>
-            <th> Meal Plan ID </th>
-            <th> Meal Plan Description </th>
-            <th> Delivery First Name </th>
-            <th> Delivery Last Name </th>
-            <th> Delivery Phone </th>
-            <th> Payment ID </th>
-            <th> Coupon </th>
-            <th> Amount Due </th>
-            <th> Amount Paid </th>
-            <th> Time Paid </th>
-            <th> Credit Card </th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>
+              Email
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'customer_phone_num'}
+                direction={state.sortActivity.field === 'customer_phone_num' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('customer_phone_num')}
+              >
+                Phone
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'purchase_uid'}
+                direction={state.sortActivity.field === 'purchase_uid' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('purchase_uid')}
+              >
+                Purchase Id
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'purchase_status'}
+                direction={state.sortActivity.field === 'purchase_status' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('purchase_status')}
+              >
+                Purchase Status
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              Meal Plan ID
+            </TableCell>
+            <TableCell>
+              Meal Plan Description
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'delivery_first_name'}
+                direction={state.sortActivity.field === 'delivery_first_name' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('delivery_first_name')}
+              >
+                Delivery First Name
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'delivery_last_name'}
+                direction={state.sortActivity.field === 'delivery_last_name' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('delivery_last_name')}
+              >
+                Delivery Last Name
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'delivery_phone_num'}
+                direction={state.sortActivity.field === 'delivery_phone_num' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('delivery_phone_num')}
+              >
+                Delivery Phone
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'payment_uid'}
+                direction={state.sortActivity.field === 'payment_uid' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('payment_uid')}
+              >
+                Payment Id
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'pay_coupon_id'}
+                direction={state.sortActivity.field === 'pay_coupon_id' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('pay_coupon_id')}
+              >
+                Coupon
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'amount_due'}
+                direction={state.sortActivity.field === 'amount_due' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('amount_due')}
+              >
+                Amount Due
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'amount_paid'}
+                direction={state.sortActivity.field === 'amount_paid' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('amount_paid')}
+              >
+                Amount Paid
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortActivity.field === 'payment_time_stamp'}
+                direction={state.sortActivity.field === 'payment_time_stamp' ? state.sortActivity.direction : 'asc'}
+                onClick={() => changeSortOptions('payment_time_stamp')}
+              >
+                Time Paid
+              </TableSortLabel>
+            </TableCell>
+            <TableCell> Credit Card </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {
             state.customerActivity.map(
               (activity) => {
                 return (
-                  <tr
+                  <TableRow
                     key={activity.purchase_uid}
+                    hover
                     onClick={
                       () => {
                         selectPurchase(activity)
                       }
                     }
                   >
-                    <td> {activity.customer_email} </td>
-                    <td> {activity.customer_phone_num} </td>
-                    <td> {activity.purchase_uid} </td>
-                    <td> {activity.purchase_status} </td>
-                    <td> {activity.items[0].item_uid} </td>
-                    <td> {activity.items[0].name} </td>
-                    <td> {activity.delivery_first_name} </td>
-                    <td> {activity.delivery_last_name} </td>
-                    <td> {activity.delivery_phone_num} </td>
-                    <td> {activity.payment_uid} </td>
-                    <td> {activity.pay_coupon_id} </td>
-                    <td> {activity.amount_due} </td>
-                    <td> {activity.amount_paid} </td>
-                    <td> {activity.payment_time_stamp} </td>
-                    <td> {activity.cc_num} </td>
-                  </tr>
+                    <TableCell> {activity.customer_email} </TableCell>
+                    <TableCell> {activity.customer_phone_num} </TableCell>
+                    <TableCell> {activity.purchase_uid} </TableCell>
+                    <TableCell> {activity.purchase_status} </TableCell>
+                    <TableCell> {activity.items[0].item_uid} </TableCell>
+                    <TableCell> {activity.items[0].name} </TableCell>
+                    <TableCell> {activity.delivery_first_name} </TableCell>
+                    <TableCell> {activity.delivery_last_name} </TableCell>
+                    <TableCell> {activity.delivery_phone_num} </TableCell>
+                    <TableCell> {activity.payment_uid} </TableCell>
+                    <TableCell> {activity.pay_coupon_id} </TableCell>
+                    <TableCell> {activity.amount_due} </TableCell>
+                    <TableCell> {activity.amount_paid} </TableCell>
+                    <TableCell> {activity.payment_time_stamp} </TableCell>
+                    <TableCell> {activity.cc_num} </TableCell>
+                  </TableRow>
                 )
               }
             )
           }
-        </tbody>
+        </TableBody>
       </Table>
     </>
   );

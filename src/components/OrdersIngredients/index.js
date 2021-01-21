@@ -1,15 +1,28 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
-import { formatTime } from '../../helperFuncs';
+import { formatTime, sortedArray } from '../../helperFuncs';
 import {
-  Breadcrumb, Container, Row, Col, Form, Table
+  Breadcrumb, Container, Row, Col, Form
 } from 'react-bootstrap';
+import {
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
+} from '@material-ui/core';
 
 const initialState = {
   selectedDate: '',
   ordersData: [],
+  sortedOrdersData: [],
+  sortOrders: {
+    field: '',
+    direction: '',
+  },
   ingredientsData: [],
+  sortedIngredientsData: [],
+  sortIngredients: {
+    field: '',
+    direction: '',
+  }
 }
 
 function reducer(state, action) {
@@ -24,10 +37,36 @@ function reducer(state, action) {
         ...state,
         ordersData: action.payload,
       }
+    case 'FILTER_ORDERS':
+      return {
+        ...state,
+        sortedOrdersData: action.payload
+      }
+    case 'SORT_ORDERS':
+      return {
+        ...state,
+        sortOrders: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
+      }
     case 'FETCH_INGREDIENTS':
       return {
         ...state,
         ingredientsData: action.payload,
+      }
+    case 'FILTER_INGREDIENTS':
+      return {
+        ...state,
+        sortedIngredientsData: action.payload
+      }
+    case 'SORT_INGREDIENTS':
+      return {
+        ...state,
+        sortIngredients: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
       }
     default:
       return state;
@@ -44,13 +83,13 @@ function OrdersIngredients() {
     return orderDatesUnique;
   }
 
-  const getOrderData = () => {
-    const curOrders = state.ordersData.filter((order) => formatTime(order.d_menu_date) === state.selectedDate);
+  const getOrderData = (date) => {
+    const curOrders = state.ordersData.filter((order) => formatTime(order.d_menu_date) === date);
     return curOrders;
   }
 
-  const getIngredientsData = () => {
-    const curIngredients = state.ingredientsData.filter((ingredient) => formatTime(ingredient.d_menu_date) === state.selectedDate);
+  const getIngredientsData = (date) => {
+    const curIngredients = state.ingredientsData.filter((ingredient) => formatTime(ingredient.d_menu_date) === date);
     return curIngredients;
   }
 
@@ -90,9 +129,43 @@ function OrdersIngredients() {
       });
   },[])
 
+  const changeSortOrder = (field) => {
+    const isAsc = (state.sortOrders.field === field && state.sortOrders.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_ORDERS',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedOrders = sortedArray(state.sortedOrdersData, field, direction);
+    dispatch({ type: 'FILTER_ORDERS', payload: sortedOrders })
+  }
+
+  const changeSortIngredient = (field) => {
+    const isAsc = (state.sortIngredients.field === field && state.sortIngredients.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_INGREDIENTS',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedIngredients = sortedArray(state.sortedIngredientsData, field, direction);
+    dispatch({ type: 'FILTER_INGREDIENTS', payload: sortedIngredients })
+  }
+
   // Change date 
   const changeDate = (newDate) => {
-    dispatch({ type: 'CHANGE_DATE', payload: newDate })
+    dispatch({ type: 'CHANGE_DATE', payload: newDate });
+    const newOrders = getOrderData(newDate);
+    const sortedOrders = sortedArray(newOrders, state.sortOrders.field, state.sortOrders.direction);
+    const newIngredients = getIngredientsData(newDate);
+    const sortedIngredients = sortedArray(newIngredients, state.sortIngredients.field, state.sortIngredients.direction);
+    dispatch({ type: 'FILTER_ORDERS', payload: sortedOrders});
+    dispatch({ type: 'FILTER_INGREDIENTS', payload: sortedIngredients});
   }
 
   return (
@@ -142,68 +215,119 @@ function OrdersIngredients() {
         </Row>
         <Row>
           <Col>
-            <Table hover>
-              <thead>
-                <tr>
-                  <th> Menu Date </th>
-                  <th> Meal Name </th>
-                  <th> Quantity </th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    Menu Date
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortOrders.field === 'jt_name'}
+                      direction={state.sortOrders.field === 'jt_name' ? state.sortOrders.direction : 'asc'}
+                      onClick={() => changeSortOrder('jt_name')}
+                    >
+                      Meal Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortOrders.field === 'sum(jt_qty)'}
+                      direction={state.sortOrders.field === 'sum(jt_qty)' ? state.sortOrders.direction : 'asc'}
+                      onClick={() => changeSortOrder('sum(jt_qty)')}
+                    >
+                      Quantity
+                    </TableSortLabel>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {
-                  getOrderData().map(
+                  state.sortedOrdersData.map(
                     (order, orderIndex) => {
                       return (
-                        <tr
+                        <TableRow
                           key={orderIndex}
+                          hover
                         >
-                          <td> {order.d_menu_date} </td>
-                          <td> {order.jt_name} </td>
-                          <td> {order['sum(jt_qty)']} </td>
-                        </tr>
+                          <TableCell> {order.d_menu_date} </TableCell>
+                          <TableCell> {order.jt_name} </TableCell>
+                          <TableCell> {order['sum(jt_qty)']} </TableCell>
+                        </TableRow>
                       );
                     }
                   )
                 }
-              </tbody>
+              </TableBody>
             </Table>
           </Col>
         </Row>
-        <Row>
+        <Row
+          style={{
+            marginTop: '4rem',
+            marginBottom: '1rem',
+          }}
+        >
           <Col>
             <h5> Ingredients Needed </h5>
           </Col>
         </Row>
         <Row>
           <Col>
-            <Table hover>
-              <thead>
-                <tr>
-                  <th> Menu Date </th>
-                  <th> Ingredient Name </th>
-                  <th> Quantity </th>
-                  <th> Unit </th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    Menu Date
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortIngredients.field === 'ingredient_desc'}
+                      direction={state.sortIngredients.field === 'ingredient_desc' ? state.sortIngredients.direction : 'asc'}
+                      onClick={() => changeSortIngredient('ingredient_desc')}
+                    >
+                      Ingredient Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortIngredients.field === 'sum(qty_needed)'}
+                      direction={state.sortIngredients.field === 'sum(qty_needed)' ? state.sortIngredients.direction : 'asc'}
+                      onClick={() => changeSortIngredient('sum(qty_needed)')}
+                    >
+                      Quantity
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortIngredients.field === 'units'}
+                      direction={state.sortIngredients.field === 'units' ? state.sortIngredients.direction : 'asc'}
+                      onClick={() => changeSortIngredient('units')}
+                    >
+                      Unit
+                    </TableSortLabel>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {
-                  getIngredientsData().map(
+                  state.sortedIngredientsData.map(
                     (ingredient, ingredientIndex) => {
                       return (
-                        <tr
+                        <TableRow
                           key={ingredientIndex}
+                          hover
                         >
-                          <td> {ingredient.d_menu_date} </td>
-                          <td> {ingredient.ingredient_desc} </td>
-                          <td> {ingredient['sum(qty_needed)']} </td>
-                          <td> {ingredient.units} </td>
-                        </tr>
+                          <TableCell> {ingredient.d_menu_date} </TableCell>
+                          <TableCell> {ingredient.ingredient_desc} </TableCell>
+                          <TableCell> {ingredient['sum(qty_needed)']} </TableCell>
+                          <TableCell> {ingredient.units} </TableCell>
+                        </TableRow>
                       )
                     }
                   )
                 }
-              </tbody>
+              </TableBody>
             </Table>
           </Col>
         </Row>

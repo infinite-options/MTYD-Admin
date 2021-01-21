@@ -1,9 +1,13 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import {
-  Breadcrumb, Container, Row, Col, Table, Modal, Form, Button
+  Breadcrumb, Container, Row, Col, Modal, Form, Button
 } from 'react-bootstrap';
+import {
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
+} from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEdit, 
@@ -11,6 +15,10 @@ import {
 
 const initialState = {
   zones: [],
+  sortZone: {
+    field: '',
+    direction: '',
+  },
   editingZone: false,
   editedZone: {
     zone_uid:'',
@@ -35,20 +43,28 @@ const initialState = {
     RB_long:'',
     RB_lat:'',
   },
-  businesses: [],
+  // businesses: [],
 };
 
 function reducer(state, action) {
   switch(action.type) {
-    case 'FETCH_BUSINESSES':
-      return {
-        ...state,
-        businesses: action.payload,
-      }
+    // case 'FETCH_BUSINESSES':
+    //   return {
+    //     ...state,
+    //     businesses: action.payload,
+    //   }
     case 'FETCH_ZONES':
       return {
         ...state,
         zones: action.payload,
+      }
+    case 'SORT_ZONES':
+      return {
+        ...state,
+        sortZone: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
       }
     case 'TOGGLE_EDIT_ZONE':
       return {
@@ -93,6 +109,20 @@ function Zones () {
         // eslint-disable-next-line no-console
         console.log(err);
       });
+  }
+
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortZone.field === field && state.sortZone.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_ZONES',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedZone = sortedArray(state.zones, field, direction);
+    dispatch({ type: 'FETCH_ZONES', payload: sortedZone});
   }
 
   const toggleEditZone = (initialZone) => {
@@ -159,23 +189,23 @@ function Zones () {
   },[])
 
   // Fetch businesses
-  useEffect(() => {
-    axios
-      .get(`${BASE_URL}all_businesses`)
-      .then((response) => {
-        const businessApiResult = response.data.result;
-        dispatch({ type: 'FETCH_BUSINESSES', payload: businessApiResult});
+  // useEffect(() => {
+  //   axios
+  //     .get(`${BASE_URL}all_businesses`)
+  //     .then((response) => {
+  //       const businessApiResult = response.data.result;
+  //       dispatch({ type: 'FETCH_BUSINESSES', payload: businessApiResult});
 
-      })
-      .catch((err) => {
-        if (err.response) {
-          // eslint-disable-next-line no-console
-          console.log(err.response);
-        }
-        // eslint-disable-next-line no-console
-        console.log(err);
-      });
-  },[])
+  //     })
+  //     .catch((err) => {
+  //       if (err.response) {
+  //         // eslint-disable-next-line no-console
+  //         console.log(err.response);
+  //       }
+  //       // eslint-disable-next-line no-console
+  //       console.log(err);
+  //     });
+  // },[])
 
   return (
     <div>
@@ -213,71 +243,215 @@ function Zones () {
         >
           <Col>
             <Table>
-              <thead>
-                <tr>
-                  <th> Zone Name </th>
-                  <th> Area </th>
-                  <th> Zone </th>
-                  <th> Delivery Day </th>
-                  <th> Delivery Time </th>
-                  <th> Accepting Day </th>
-                  <th> Accepting Time </th>
-                  <th> Service Fee </th>
-                  <th> Delivery Fee </th>
-                  <th> Tax Rate </th>
-                  <th> LB long </th>
-                  <th> LB lat </th>
-                  <th> LT long </th>
-                  <th> LT lat </th>
-                  <th> RB long </th>
-                  <th> RB lat </th>
-                  <th> RT long </th>
-                  <th> RT lat </th>
-                  <th> Action </th>
-                </tr>
-              </thead>
-              <tbody>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'zone_name'}
+                      direction={state.sortZone.field === 'zone_name' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('zone_name')}
+                    >
+                      Zone Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'area'}
+                      direction={state.sortZone.field === 'area' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('area')}
+                    >
+                      Area
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'zone'}
+                      direction={state.sortZone.field === 'zone' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('zone')}
+                    >
+                      Zone
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'z_delivery_day'}
+                      direction={state.sortZone.field === 'z_delivery_day' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('z_delivery_day')}
+                    >
+                      Delivery Day
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'z_delivery_time'}
+                      direction={state.sortZone.field === 'z_delivery_time' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('z_delivery_time')}
+                    >
+                      Delivery Time
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'z_accepting_day'}
+                      direction={state.sortZone.field === 'z_accepting_day' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('z_accepting_day')}
+                    >
+                      Accepting Day
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'z_accepting_time'}
+                      direction={state.sortZone.field === 'z_accepting_time' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('z_accepting_time')}
+                    >
+                      Accepting Time
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'service_fee'}
+                      direction={state.sortZone.field === 'service_fee' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('service_fee')}
+                    >
+                      Service Fee
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'delivery_fee'}
+                      direction={state.sortZone.field === 'delivery_fee' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('delivery_fee')}
+                    >
+                      Delivery Fee
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'tax_rate'}
+                      direction={state.sortZone.field === 'tax_rate' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('tax_rate')}
+                    >
+                      Tax Rate
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'LB_long'}
+                      direction={state.sortZone.field === 'LB_long' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('LB_long')}
+                    >
+                      LB long
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'LB_lat'}
+                      direction={state.sortZone.field === 'LB_lat' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('LB_lat')}
+                    >
+                      LB lat
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'LT_long'}
+                      direction={state.sortZone.field === 'LT_long' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('LT_long')}
+                    >
+                      LT long
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'LT_lat'}
+                      direction={state.sortZone.field === 'LT_lat' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('LT_lat')}
+                    >
+                      LT lat
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'RB_long'}
+                      direction={state.sortZone.field === 'RB_long' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('RB_long')}
+                    >
+                      RB long
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'RB_lat'}
+                      direction={state.sortZone.field === 'RB_lat' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('RB_lat')}
+                    >
+                      RB lat
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'RT_long'}
+                      direction={state.sortZone.field === 'RT_long' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('RT_long')}
+                    >
+                      RT long
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={state.sortZone.field === 'RT_lat'}
+                      direction={state.sortZone.field === 'RT_lat' ? state.sortZone.direction : 'asc'}
+                      onClick={() => changeSortOptions('RT_lat')}
+                    >
+                      RT lat
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell> Action </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
               {
                 state.zones.map(
                   (zone) => {
                     return (
-                      <tr
+                      <TableRow
                         key={zone.zone_uid}
                       >
-                        <td> {zone.zone_name} </td>
-                        <td> {zone.area} </td>
-                        <td> {zone.zone} </td>
-                        <td> {zone.z_delivery_day} </td>
-                        <td> {zone.z_delivery_time} </td>
-                        <td> {zone.z_accepting_day} </td>
-                        <td> {zone.z_accepting_time} </td>
-                        <td> {zone.service_fee} </td>
-                        <td> {zone.delivery_fee} </td>
-                        <td> {zone.tax_rate} </td>
-                        <td> {zone.LB_long} </td>
-                        <td> {zone.LB_lat} </td>
-                        <td> {zone.LT_long} </td>
-                        <td> {zone.LT_lat} </td>
-                        <td> {zone.RB_long} </td>
-                        <td> {zone.RB_lat} </td>
-                        <td> {zone.RT_long} </td>
-                        <td> {zone.RT_lat} </td>
-                        <td>
-                            <button
-                              className={'icon-button'}
-                              onClick={() => {toggleEditZone(zone)}}
-                            >
-                              <FontAwesomeIcon
-                                icon={faEdit}
-                              />
-                            </button>
-                          </td>
-                      </tr>
+                        <TableCell> {zone.zone_name} </TableCell>
+                        <TableCell> {zone.area} </TableCell>
+                        <TableCell> {zone.zone} </TableCell>
+                        <TableCell> {zone.z_delivery_day} </TableCell>
+                        <TableCell> {zone.z_delivery_time} </TableCell>
+                        <TableCell> {zone.z_accepting_day} </TableCell>
+                        <TableCell> {zone.z_accepting_time} </TableCell>
+                        <TableCell> {zone.service_fee} </TableCell>
+                        <TableCell> {zone.delivery_fee} </TableCell>
+                        <TableCell> {zone.tax_rate} </TableCell>
+                        <TableCell> {zone.LB_long} </TableCell>
+                        <TableCell> {zone.LB_lat} </TableCell>
+                        <TableCell> {zone.LT_long} </TableCell>
+                        <TableCell> {zone.LT_lat} </TableCell>
+                        <TableCell> {zone.RB_long} </TableCell>
+                        <TableCell> {zone.RB_lat} </TableCell>
+                        <TableCell> {zone.RT_long} </TableCell>
+                        <TableCell> {zone.RT_lat} </TableCell>
+                        <TableCell>
+                          <button
+                            className={'icon-button'}
+                            onClick={() => {toggleEditZone(zone)}}
+                          >
+                            <FontAwesomeIcon
+                              icon={faEdit}
+                            />
+                          </button>
+                        </TableCell>
+                      </TableRow>
                     )
                   }
                 )
               }
-              </tbody>
+              </TableBody>
             </Table>
           </Col>
         </Row>

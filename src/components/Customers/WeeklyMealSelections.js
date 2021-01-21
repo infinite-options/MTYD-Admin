@@ -2,21 +2,24 @@ import { useContext, useEffect, useReducer } from 'react';
 import { CustomerContext } from './customerContext';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import PropTypes from 'prop-types';
 import {
-  Table
-} from 'react-bootstrap';
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell
+} from '@material-ui/core';
 
 function MealSelectionRow ({data}) {
   const numItems = data['group_concat(jt_name)'].length;
   const mealSelectionRows = [];
   for (let itemIndex=0; itemIndex < numItems; itemIndex++) {
     mealSelectionRows.push(
-      <tr>
-        <td> {data.d_menu_date} </td>
-        <td> {data['group_concat(jt_name)'][itemIndex]} </td>
-        <td> {data['group_concat(jt_qty)'][itemIndex]} </td>
-      </tr>
+      <TableRow
+        hover
+      >
+        <TableCell> {data.d_menu_date} </TableCell>
+        <TableCell> {data['group_concat(jt_name)'][itemIndex]} </TableCell>
+        <TableCell> {data['group_concat(jt_qty)'][itemIndex]} </TableCell>
+      </TableRow>
     )
   }
   return (
@@ -31,7 +34,11 @@ MealSelectionRow.propTypes = {
 }
 
 const initialState = {
-  mealSelections: []
+  mealSelections: [],
+  sortSelections: {
+    field: '',
+    direction: '',
+  },
 }
 
 function reducer(state, action) {
@@ -40,6 +47,14 @@ function reducer(state, action) {
       return {
         ...state,
         mealSelections: action.payload,
+      }
+    case 'SORT_SELECTION':
+      return {
+        ...state,
+        sortSelections: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
       }
     default:
       return state
@@ -82,18 +97,44 @@ function WeeklyMealSelections() {
     }
   },[customerContext.state.purchaseId])
 
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortSelections.field === field && state.sortSelections.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_SELECTION',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedPayment = sortedArray(state.mealSelections, field, direction);
+    dispatch({ type: 'FETCH_MEAL_SELECTIONS', payload: sortedPayment})
+  }
+
   return (
     <>
       <h5> Weekly Meal Selections </h5>
-      <Table striped hover>
-        <thead>
-          <tr>
-            <td> Menu Day </td>
-            <td> Meal Name </td>
-            <td> Total </td>
-          </tr>
-        </thead>
-        <tbody>
+      <Table hover>
+        <TableHead>
+          <TableRow>
+            <TableCell>
+              <TableSortLabel
+                active={state.sortSelections.field === 'd_menu_date'}
+                direction={state.sortSelections.field === 'd_menu_date' ? state.sortSelections.direction : 'asc'}
+                onClick={() => changeSortOptions('d_menu_date')}
+              >
+                Menu Day
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              Meal Name
+            </TableCell>
+            <TableCell>
+              Total
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {
             state.mealSelections.map(
               (mealSelection,mealSelectionIndex) => {
@@ -103,7 +144,7 @@ function WeeklyMealSelections() {
               }
             )
           }
-        </tbody>
+        </TableBody>
       </Table>
     </>
   )

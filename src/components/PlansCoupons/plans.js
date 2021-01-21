@@ -1,9 +1,13 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import {
-  Row, Col, Table, Modal, Form, Button
+  Row, Col, Modal, Form, Button
 } from 'react-bootstrap';
+import {
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell,
+} from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEdit, 
@@ -12,6 +16,10 @@ import {
 const initialState = {
   mealPlans: [],
   editingPlan: false,
+  sortMealPlan: {
+    field: '',
+    direction: '',
+  },
   editedPlan: {
     item_uid: '',
     item_desc: '',
@@ -43,6 +51,14 @@ function reducer(state, action) {
       return {
         ...state,
         editedPlan: action.payload,
+      }
+    case 'SORT_PLAN':
+      return {
+        ...state,
+        sortMealPlan: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
       }
     default:
       return state;
@@ -84,6 +100,20 @@ function Plans() {
       });
   }
 
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortMealPlan.field === field && state.sortMealPlan.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_PLAN',
+      payload: {
+        field: field,
+        direction: direction
+      }
+    })
+    const sortedPlan = sortedArray(state.mealPlans,field,direction);
+    dispatch({ type: 'FETCH_PLANS', payload: sortedPlan});
+  }
+
   // Fetch Plans
   useEffect(() => {
     axios
@@ -97,9 +127,9 @@ function Plans() {
         // Convert property values to string and nulls to empty string
         for(let index = 0; index < plansApiResult.length; index++) {
           for (const property in plansApiResult[index]) {
-              const value = plansApiResult[index][property];
-              plansApiResult[index][property] = value ? value.toString() : '';
-            } 
+            const value = plansApiResult[index][property];
+            plansApiResult[index][property] = value !== null ? value : '';
+          }
         }
         dispatch({ type: 'FETCH_PLANS', payload: plansApiResult});
       })
@@ -125,31 +155,102 @@ function Plans() {
       <Row>
         <Col>
           <Table>
-            <thead>
-              <tr>
-                <th> Plan </th>
-                <th> Plan Description </th>
-                <th> Payment Frequency </th>
-                <th> In Short </th>
-                <th> Picture </th>
-                <th> Number of Meals </th>
-                <th> Weekly Price </th>
-                <th> Plan Price </th>
-                <th> Meal Shipping </th>
-                <th> Action </th>
-              </tr>
-            </thead>
-            <tbody>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'item_desc'}
+                    direction={state.sortMealPlan.field === 'item_desc' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('item_desc')}
+                  >
+                    Plan
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'info_headline'}
+                    direction={state.sortMealPlan.field === 'info_headline' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('info_headline')}
+                  >
+                    Plan Description
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'payment_frequency'}
+                    direction={state.sortMealPlan.field === 'payment_frequency' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('payment_frequency')}
+                  >
+                    Payment Frequency
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'info_footer'}
+                    direction={state.sortMealPlan.field === 'info_footer' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('info_footer')}
+                  >
+                    In Short
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  Picture
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'num_items'}
+                    direction={state.sortMealPlan.field === 'num_items' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('num_items')}
+                  >
+                    Number of Meals
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'info_weekly_price'}
+                    direction={state.sortMealPlan.field === 'info_weekly_price' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('info_weekly_price')}
+                  >
+                    Weekly Price
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'item_price'}
+                    direction={state.sortMealPlan.field === 'item_price' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('item_price')}
+                  >
+                    Plan Price
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortMealPlan.field === 'shipping'}
+                    direction={state.sortMealPlan.field === 'shipping' ? state.sortMealPlan.direction : 'asc'}
+                    onClick={() => changeSortOptions('shipping')}
+                  >
+                    Meal Shipping
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  Action
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {
                 state.mealPlans.map(
                   (mealPlan) => {
                     return (
-                      <tr key={mealPlan.item_uid}>
-                        <td> {mealPlan.item_desc} </td>
-                        <td> {mealPlan.info_headline} </td>
-                        <td> {mealPlan.payment_frequency} </td>
-                        <td> {mealPlan.info_footer} </td>
-                        <td>
+                      <TableRow
+                        key={mealPlan.item_uid}
+                        hover
+                      >
+                        <TableCell> {mealPlan.item_desc} </TableCell>
+                        <TableCell> {mealPlan.info_headline} </TableCell>
+                        <TableCell> {mealPlan.payment_frequency} </TableCell>
+                        <TableCell> {mealPlan.info_footer} </TableCell>
+                        <TableCell>
                           <img
                             style={{
                               maxWidth: '200px',
@@ -158,12 +259,12 @@ function Plans() {
                             src={mealPlan.item_photo}
                             alt="Meal Plan Picture"
                           />
-                        </td>
-                        <td> {mealPlan.num_items} </td>
-                        <td> {mealPlan.info_weekly_price} </td>
-                        <td> {mealPlan.item_price} </td>
-                        <td> {mealPlan.shipping} </td>
-                        <td>
+                        </TableCell>
+                        <TableCell> {mealPlan.num_items} </TableCell>
+                        <TableCell> {mealPlan.info_weekly_price} </TableCell>
+                        <TableCell> {mealPlan.item_price} </TableCell>
+                        <TableCell> {mealPlan.shipping} </TableCell>
+                        <TableCell>
                           <button
                             className={'icon-button'}
                             onClick={
@@ -176,13 +277,13 @@ function Plans() {
                               icon={faEdit}
                             />
                           </button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     )
                   }
                 )
               }
-            </tbody>
+            </TableBody>
           </Table>
         </Col>
       </Row>

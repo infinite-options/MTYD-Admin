@@ -1,9 +1,13 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { sortedArray } from '../../helperFuncs';
 import {
-  Row, Col, Table, Modal, Form, Button
+  Row, Col, Modal, Form, Button
 } from 'react-bootstrap';
+import {
+  Table, TableHead, TableSortLabel, TableBody, TableRow, TableCell,
+} from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEdit, 
@@ -11,6 +15,10 @@ import {
 
 const initialState = {
   coupons: [],
+  sortCoupon: {
+    field: '',
+    direction: '',
+  },
   editingCoupon: false,
   editedCoupon: {
     coupon_uid: '',
@@ -34,6 +42,14 @@ function reducer(state, action) {
       return {
         ...state,
         coupons: action.payload,
+      }
+    case 'SORT_COUPON':
+      return {
+        ...state,
+        sortCoupon: {
+          field: action.payload.field,
+          direction: action.payload.direction,
+        }
       }
     case 'TOGGLE_EDIT_COUPON':
       return {
@@ -126,6 +142,20 @@ function Coupons() {
     }
   }
 
+  const changeSortOptions = (field) => {
+    const isAsc = (state.sortCoupon.field === field && state.sortCoupon.direction === 'asc');
+    const direction = isAsc ? 'desc' : 'asc';
+    dispatch({
+      type: 'SORT_COUPON',
+      payload: {
+        field: field,
+        direction: direction,
+      }
+    })
+    const sortedCoupon = sortedArray(state.coupons,field,direction);
+    dispatch({ type: 'FETCH_COUPONS', payload: sortedCoupon});
+  }
+
   const getCoupons = () => {
     axios
       .get(`${BASE_URL}coupons`)
@@ -135,7 +165,7 @@ function Coupons() {
         for(let index = 0; index < couponsApiResult.length; index++) {
           for (const property in couponsApiResult[index]) {
             const value = couponsApiResult[index][property];
-            couponsApiResult[index][property] = value ? value.toString() : '';
+            couponsApiResult[index][property] = value !== null ? value : '';
           } 
         }
         dispatch({ type: 'FETCH_COUPONS', payload: couponsApiResult});
@@ -183,40 +213,122 @@ function Coupons() {
       <Row>
         <Col>
           <Table>
-            <thead>
-              <tr>
-                <th> Coupon ID </th>
-                <th> Valid </th>
-                <th> Discount % </th>
-                <th> Discount Amount </th>
-                <th> Discount Shipping </th>
-                <th> Expiration Date </th>
-                <th> Limits </th>
-                <th> Notes </th>
-                <th> Number Used </th>
-                <th> Recurring </th>
-                <th> Email </th>
-                <th> Action </th>
-              </tr>
-            </thead>
-            <tbody>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'coupon_id'}
+                    direction={state.sortCoupon.field === 'coupon_id' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('coupon_id')}
+                  >
+                    Coupon ID
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'valid'}
+                    direction={state.sortCoupon.field === 'valid' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('valid')}
+                  >
+                    Valid
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'discount_percent'}
+                    direction={state.sortCoupon.field === 'discount_percent' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('discount_percent')}
+                  >
+                    Discount %
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'discount_amount'}
+                    direction={state.sortCoupon.field === 'discount_amount' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('discount_percent')}
+                  >
+                    Discount Amonut
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'discount_shipping'}
+                    direction={state.sortCoupon.field === 'discount_shipping' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('discount_shipping')}
+                  >
+                    Discount Shipping
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'expire_date'}
+                    direction={state.sortCoupon.field === 'expire_date' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('expire_date')}
+                  >
+                    Expiration Date
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'limits'}
+                    direction={state.sortCoupon.field === 'limits' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('limits')}
+                  >
+                    Limits
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'num_used'}
+                    direction={state.sortCoupon.field === 'num_used' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('num_used')}
+                  >
+                    Number Used
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'recurring'}
+                    direction={state.sortCoupon.field === 'recurring' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('recurring')}
+                  >
+                    Recurring
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={state.sortCoupon.field === 'email_id'}
+                    direction={state.sortCoupon.field === 'email_id' ? state.sortCoupon.direction : 'asc'}
+                    onClick={() => changeSortOptions('email_id')}
+                  >
+                    Email
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell> Action </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {
                 state.coupons.map(
                   (coupon) => {
                     return (
-                      <tr key={coupon.coupon_uid}>
-                        <td> {coupon.coupon_id} </td>
-                        <td> {coupon.valid} </td>
-                        <td> {coupon.discount_percent} </td>
-                        <td> {coupon.discount_amount} </td>
-                        <td> {coupon.discount_shipping} </td>
-                        <td> {coupon.expire_date} </td>
-                        <td> {coupon.limits} </td>
-                        <td> {coupon.notes} </td>
-                        <td> {coupon.num_used} </td>
-                        <td> {coupon.recurring} </td>
-                        <td> {coupon.email_id} </td>
-                        <td>
+                      <TableRow
+                        key={coupon.coupon_uid}
+                        hover
+                      >
+                        <TableCell> {coupon.coupon_id} </TableCell>
+                        <TableCell> {coupon.valid} </TableCell>
+                        <TableCell> {coupon.discount_percent} </TableCell>
+                        <TableCell> {coupon.discount_amount} </TableCell>
+                        <TableCell> {coupon.discount_shipping} </TableCell>
+                        <TableCell> {coupon.expire_date} </TableCell>
+                        <TableCell> {coupon.limits} </TableCell>
+                        <TableCell> {coupon.notes} </TableCell>
+                        <TableCell> {coupon.num_used} </TableCell>
+                        <TableCell> {coupon.recurring} </TableCell>
+                        <TableCell> {coupon.email_id} </TableCell>
+                        <TableCell>
                           <button
                             className={'icon-button'}
                             onClick={() => {toggleEditCoupon(coupon)}}
@@ -225,13 +337,13 @@ function Coupons() {
                               icon={faEdit}
                             />
                           </button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     )
                   }
                 )
               }
-            </tbody>
+            </TableBody>
           </Table>
         </Col>
       </Row>
