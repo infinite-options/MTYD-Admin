@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
+import { descendingComparator } from '../../helperFuncs';
 import {
   Breadcrumb, Container, Row, Col, Form
 } from 'react-bootstrap';
@@ -50,10 +51,20 @@ function Customers() {
     axios
       .get(`${BASE_URL}customer_infos`)
       .then((response) => {
-        if(response.status === 200) {
-          const customers_api = response.data.result;
-          dispatch({ type: 'FETCH_CUSTOMERS', payload: customers_api });
-        }
+        const customers_api = response.data.result;
+        customers_api.sort((eltA, eltB) => {
+          let result = -descendingComparator(eltA, eltB, 'customer_first_name');
+          if(result !== 0) {
+            return result;
+          }
+          result = -descendingComparator(eltA, eltB, 'customer_last_name');
+          if(result !== 0) {
+            return result;
+          }
+          result = -descendingComparator(eltA, eltB, 'customer_email');
+          return result;
+        })
+        dispatch({ type: 'FETCH_CUSTOMERS', payload: customers_api });
       })
       .catch((err) => {
         if (err.response) {

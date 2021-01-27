@@ -114,7 +114,7 @@ function WeeklyMealSelections() {
   return (
     <>
       <h5> Weekly Meal Selections </h5>
-      <Table hover>
+      <Table>
         <TableHead>
           <TableRow>
             <TableCell>

@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
 import { formatTime, sortedArray } from '../../helperFuncs';
@@ -90,15 +90,26 @@ function reducer(state, action) {
 function CreateMenu() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const getMenuDates = () => {
-    const menuDates = state.menuData.map((menuItem) => formatTime(menuItem.menu_date));
+  const menuDates = useMemo(() => {
+    const menuDates = state.menuData.map((menuItem) => menuItem.menu_date);
     const menuDatesUnique = menuDates.filter((elt, index) => menuDates.indexOf(elt) === index);
     menuDatesUnique.sort();
-    return menuDatesUnique;
-  };
+    const menuDatesFormatted = menuDatesUnique.map((menuDate,dateIndex) => {
+      const menuDateTime = new Date(formatTime(menuDate));
+      return (
+        {
+          value: menuDatesUnique[dateIndex],
+          display: menuDateTime.toDateString()
+        }
+      )
+    })
+    return menuDatesFormatted;
+  },[state.menuData]);
+
+  
 
   const getMenuData = (date) => {
-    const curMenu = state.menuData.filter((item) => formatTime(item.menu_date) === date);
+    const curMenu = state.menuData.filter((item) => item.menu_date === date);
     return curMenu;
   };
 
@@ -269,10 +280,10 @@ function CreateMenu() {
                   >
                     <option value="" hidden>Choose date</option>
                     {
-                      getMenuDates().map(
+                      menuDates.map(
                         (date) => (
-                          <option value={date} key={date}>
-                            {date}
+                          <option value={date.value} key={date.value}>
+                            {date.display}
                           </option>
                         ),
                       )

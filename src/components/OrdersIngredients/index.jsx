@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '../../constants';
 import { formatTime, sortedArray } from '../../helperFuncs';
@@ -76,20 +76,29 @@ function reducer(state, action) {
 function OrdersIngredients() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const getOrderDates = () => {
-    const orderDates = state.ordersData.map((orderItem) => formatTime(orderItem.d_menu_date));
+  const orderDates = useMemo(() => {
+    const orderDates = state.ordersData.map((orderItem) => orderItem.d_menu_date);
     const orderDatesUnique = orderDates.filter((elt, index) => orderDates.indexOf(elt) === index);
-    // orderDatesUnique.sort();
-    return orderDatesUnique;
-  }
+    orderDatesUnique.sort();
+    const orederDatesFormatted = orderDatesUnique.map((orderDate,dateIndex) => {
+      const orderDateTime = new Date(formatTime(orderDate));
+      return (
+        {
+          value: orderDatesUnique[dateIndex],
+          display: orderDateTime.toDateString()
+        }
+      )
+    })
+    return orederDatesFormatted;
+  },[state.ordersData])
 
   const getOrderData = (date) => {
-    const curOrders = state.ordersData.filter((order) => formatTime(order.d_menu_date) === date);
+    const curOrders = state.ordersData.filter((order) => order.d_menu_date === date);
     return curOrders;
   }
 
   const getIngredientsData = (date) => {
-    const curIngredients = state.ingredientsData.filter((ingredient) => formatTime(ingredient.d_menu_date) === date);
+    const curIngredients = state.ingredientsData.filter((ingredient) => ingredient.d_menu_date === date);
     return curIngredients;
   }
 
@@ -194,10 +203,10 @@ function OrdersIngredients() {
                   >
                     <option value="" hidden>Choose date</option>
                     {
-                      getOrderDates().map(
+                      orderDates.map(
                         (date) => (
-                          <option value={date} key={date}>
-                            {date}
+                          <option value={date.value} key={date.value}>
+                            {date.display}
                           </option>
                         ),
                       )

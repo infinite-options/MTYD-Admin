@@ -84,7 +84,7 @@ function NavBar() {
           <Nav>
             <Nav.Link href="/zones"> Zones </Nav.Link>
             <Nav.Link href="/">Profile</Nav.Link>
-            <Nav.Link eventKey={2} href="/">
+            <Nav.Link href="/">
               Log Out
             </Nav.Link>
           </Nav>

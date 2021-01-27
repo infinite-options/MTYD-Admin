@@ -7,7 +7,7 @@ export const formatTime = (time) => {
 
 // Get descending comparator by field, used as utility function for sort comparator
 
-const descendingComparator = (eltA, eltB, field) => {
+export const descendingComparator = (eltA, eltB, field) => {
   if(eltA[field] > eltB[field]) {
     return -1;
   } else if(eltA[field] < eltB[field]) {

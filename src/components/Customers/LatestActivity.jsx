@@ -216,11 +216,8 @@ function LatestActivity() {
                   <TableRow
                     key={activity.purchase_uid}
                     hover
-                    onClick={
-                      () => {
-                        selectPurchase(activity)
-                      }
-                    }
+                    onClick={() => {selectPurchase(activity)}}
+                    selected={customerContext.state.purchaseId === activity.purchase_uid}
                   >
                     <TableCell> {activity.customer_email} </TableCell>
                     <TableCell> {activity.customer_phone_num} </TableCell>
